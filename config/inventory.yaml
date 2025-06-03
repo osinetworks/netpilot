@@ -1,0 +1,16 @@
+groups:
+  leafs:
+    devices:
+      - arista-leaf-01
+      - arista-leaf-02
+  spines:
+    devices:
+      - arista-spine-01
+      - arista-spine-02
+
+all_devices:
+  - arista-leaf-01
+  - arista-leaf-02
+  - arista-spine-01
+  - arista-spine-02
+

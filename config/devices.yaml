@@ -1,0 +1,27 @@
+defaults:
+  username: admin
+  password: admin
+groups:
+  unknown:
+    device_type: unknown
+  cisco:
+    device_type: cisco_ios
+    enable_secret: admin
+  arista:
+    device_type: arista_eos
+devices:
+- name: arista-sw-001
+  host: 172.20.20.101
+  group: arista
+- name: arista-sw-002
+  host: 172.20.20.102
+  group: arista
+- name: cisco-sw-001
+  host: 10.10.10.11
+  group: cisco
+- name: cisco-sw-002
+  host: 10.10.10.12
+  group: cisco
+- name: cisco-sw-003
+  host: 10.10.10.13
+  group: cisco

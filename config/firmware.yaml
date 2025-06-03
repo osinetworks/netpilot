@@ -1,0 +1,9 @@
+firmware:
+  file_path: "firmware/EOS64-4.32.5.1M.bin"
+  file_name: "EOS64-4.32.5.1M.bin"
+  md5sum_path: "firmware/EOS64-4.32.5.1M.md5"
+  min_free_mb: 800
+
+reload_times:
+  before: "12:30"
+  after: "20:30"

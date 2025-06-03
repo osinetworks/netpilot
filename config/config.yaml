@@ -1,0 +1,6 @@
+# Configuration file for NetAuto project 
+thread_pools:
+  num_threads: 10 
+  max_queue: 20
+
+
