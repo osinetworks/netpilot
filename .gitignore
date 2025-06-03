@@ -1,5 +1,5 @@
 # Secrets / credentials
-config/credentials.yaml
+#config/credentials.yaml
 
 # Output files (results, backups, etc.)
 output/
