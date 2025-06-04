@@ -1,4 +1,4 @@
-# Configuration file for NetAuto project 
+# Configuration file for NetPilot project 
 thread_pools:
   num_threads: 10 
   max_queue: 20
