@@ -13,6 +13,7 @@ from utils.credentials_utils import load_credentials
 
 def load_commands_from_file(file_path):
     """Loads commands from a file, ignoring empty lines and comments."""
+
     commands = []
     with open(file_path, "r") as f:
         for line in f:
@@ -24,6 +25,7 @@ def load_commands_from_file(file_path):
 
 def _get_md5sum(file_path):
     """Return md5 hash of a local file."""
+
     h = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -33,6 +35,7 @@ def _get_md5sum(file_path):
 
 def _parse_free_space(output):
     """Parse 'dir flash:' output to get free MB."""
+
     for line in output.splitlines():
         if "bytes free" in line:
             try:
@@ -45,6 +48,7 @@ def _parse_free_space(output):
 
 def _parse_old_firmwares(output, desired_firmware):
     """Return .bin files except for the desired one."""
+
     bins = []
     for line in output.splitlines():
         if line.endswith(".bin") and desired_firmware not in line:
@@ -54,6 +58,7 @@ def _parse_old_firmwares(output, desired_firmware):
 
 def _get_switch_time(net_connect):
     """Returns (hour, minute) from switch clock."""
+
     output = net_connect.send_command("show clock")
     try:
         parts = output.strip().split()
@@ -66,6 +71,7 @@ def _get_switch_time(net_connect):
 
 def _set_switch_time(net_connect, ref_dt=None):
     """Sets switch time to system time or provided datetime."""
+
     if ref_dt is None:
         ref_dt = datetime.now()
     cmd = f"clock set {ref_dt.strftime('%H:%M:%S')} {ref_dt.strftime('%d %b %Y')}"
@@ -74,6 +80,7 @@ def _set_switch_time(net_connect, ref_dt=None):
 
 def _get_reload_time(hour, minute, reload_times):
     """Returns next reload time (str) according to policy."""
+
     before = reload_times["before"]
     after = reload_times["after"]
     h1, m1 = map(int, before.split(":"))
@@ -90,6 +97,7 @@ def _get_reload_time(hour, minute, reload_times):
 
 def get_device_inventory(device, device_type):
     """Retrieves the inventory information from a network device using Netmiko."""
+
     commands_file = INVENTORY_COMMANDS_PATHS.get(device_type)
     print(f"Using commands file: {commands_file}")
     if not commands_file:
@@ -116,6 +124,7 @@ def get_device_inventory(device, device_type):
 
 def push_config_to_device(device, commands, device_type):
     """Push configuration commands to a network device using Netmiko."""
+    
     username, password, enable_secret = load_credentials(CREDENTIALS_FILE_PATH, device.get("name", device["host"]))
     connection_params = {
         "device_type": device_type,

@@ -63,5 +63,5 @@ devices_yaml = {
 with open("devices.yaml", "w") as yamlfile:
     yaml.dump(devices_yaml, yamlfile, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-print("devices.yaml başarıyla oluşturuldu.")
+print("devices.yaml successfully created.")
 

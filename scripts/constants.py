@@ -83,5 +83,5 @@ SUPPORTED_TASKS = [
     "firmware",
 ]
 
-# Default device IP
+# Default device IP. Change this to the IP of your device. This is used for testing purposes.
 DEFAULT_DEVICE_IP = "172.20.20.101"

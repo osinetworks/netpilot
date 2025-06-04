@@ -6,7 +6,7 @@ import logging
 os.makedirs("logs", exist_ok=True)
 
 logger = logging.getLogger("backup_manager")
-logger.setLevel(logging.DEBUG)  # DEBUG ile tüm seviyeler loglanır
+logger.setLevel(logging.DEBUG) # Set to DEBUG to capture all logs
 
 # Console Handler
 console_handler = logging.StreamHandler()
@@ -19,7 +19,7 @@ file_handler = logging.FileHandler('logs/debug.log')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
 logger.addHandler(file_handler)
-# --- LOG HANDLER SETUP SONU ---
+# --- END OF LOG HANDLER SETUP ---
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scripts.constants import (
