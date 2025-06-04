@@ -1,3 +1,5 @@
+# netpilot_gui.py
+
 import streamlit as st
 import datetime
 import csv
@@ -5,16 +7,17 @@ import yaml
 import io
 import os
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
-from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH
+from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH, ERROR_LOG_PATH
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
-# --- Side Bar ---
+# Sidebar page selector
 page = st.sidebar.selectbox(
     "Select Page",
-    ("Main", "Show Backup Files"),
+    ("Main", "Show Backup Files", "Show Error Log"),
     index=0
 )
+
 
 # --- Show Backup Files PAGE ---
 def show_backup_files():
@@ -37,9 +40,44 @@ def show_backup_files():
             file_name=fname,
             mime="text/plain"
         )
-        # To show file content:
         with st.expander(f"Show content of {fname}"):
             st.code(file_bytes.decode(errors='replace'))
+
+
+#--- Show Error Log PAGE ---
+def show_error_log():
+    st.header("Error Log Viewer")
+    log_path = ERROR_LOG_PATH
+    if os.path.exists(log_path):
+        with open(log_path, "r") as f:
+            log_content = f.read()
+        if not log_content:
+            st.info("No errors found in error.log.")
+        else:
+            # Satırları tersten sırala (en yeni yukarıda)
+            reversed_log = "\n".join(log_content.strip().splitlines()[::-1])
+            st.markdown(
+                """
+                <style>
+                .stTextArea, .stTextArea textarea, .stCodeBlock {
+                    width: 100% !important;
+                    min-width: 100% !important;
+                    max-width: 100% !important;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            st.text_area(
+                label="Error Log",
+                value=reversed_log,
+                height=600,
+                label_visibility="hidden"
+            )
+            st.download_button("Download error.log", log_content, file_name=ERROR_LOG_PATH, mime="text/plain")
+    else:
+        st.warning("Error log file not found.")
+
 
 # --- Main PAGE ---
 if page == "Main":
@@ -49,6 +87,7 @@ if page == "Main":
     log_panel = st.empty()
 
     def log(message, level="info"):
+        """Log message to the UI panel."""
         colors = {"info": "🟦", "success": "🟩", "error": "🟥", "warn": "🟨"}
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         st.session_state["log_lines"].append(
@@ -68,7 +107,22 @@ if page == "Main":
             log("Starting config deployment...", "info")
             try:
                 config_manager.main()
-                log("Configuration deployed successfully!", "success")
+                # After running, check if any device had a failure and inform user accordingly
+                try:
+                    import yaml
+                    from scripts.constants import CONFIG_RESULT_FILE_PATH
+                    if os.path.exists(CONFIG_RESULT_FILE_PATH):
+                        with open(CONFIG_RESULT_FILE_PATH, "r") as f:
+                            results = yaml.safe_load(f)
+                        failed = [r for r in results if r.get("status") != "SUCCESS"]
+                        if failed:
+                            log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                        else:
+                            log("Configuration deployed successfully!", "success")
+                    else:
+                        log("Result file not found! Check logs.", "error")
+                except Exception as e:
+                    log(f"Could not verify results: {e}", "warn")
             except Exception as e:
                 log(f"Config Error: {e}", "error")
 
@@ -104,12 +158,16 @@ if page == "Main":
 
     st.markdown("---")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns([2, 10, 1, 1])
 
     with col1:
         if st.button("Clear Log"):
             st.session_state["log_lines"] = []
             log_panel.markdown("Log cleared.")
+
+    with col2:
+        if st.button("Show Error Log"):
+            show_error_log()
 
     # --- CSV TO YAML & COMMAND FILE UPLOAD PANEL ---
     st.markdown("---")
@@ -139,7 +197,8 @@ if page == "Main":
     st.markdown("#### Upload arista_backup_commands.cfg")
     arista_cmd = st.file_uploader("Upload arista_backup_commands.cfg", type=["cfg"])
     if arista_cmd is not None:
-        arista_path = os.path.join("config", "commands", "arista_backup_commands.cfg")
+        from scripts.constants import COMMANDS_PATHS
+        arista_path = COMMANDS_PATHS.get("arista_eos", os.path.join("config", "commands", "arista_backup_commands.cfg"))
         os.makedirs(os.path.dirname(arista_path), exist_ok=True)
         with open(arista_path, "wb") as f:
             f.write(arista_cmd.getvalue())
@@ -148,12 +207,15 @@ if page == "Main":
     st.markdown("#### Upload cisco_backup_commands.cfg")
     cisco_cmd = st.file_uploader("Upload cisco_backup_commands.cfg", type=["cfg"])
     if cisco_cmd is not None:
-        cisco_path = os.path.join("config", "commands", "cisco_backup_commands.cfg")
+        from scripts.constants import COMMANDS_PATHS
+        cisco_path = COMMANDS_PATHS.get("cisco_ios", os.path.join("config", "commands", "cisco_backup_commands.cfg"))
         os.makedirs(os.path.dirname(cisco_path), exist_ok=True)
         with open(cisco_path, "wb") as f:
             f.write(cisco_cmd.getvalue())
         st.success(f"cisco_backup_commands.cfg saved to: {cisco_path}")
 
-# --- Show Backup Files page ---
+# --- Show Backup Files PAGE ---
 elif page == "Show Backup Files":
     show_backup_files()
+elif page == "Show Error Log":
+    show_error_log()
