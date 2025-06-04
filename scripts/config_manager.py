@@ -150,14 +150,16 @@ def main():
             if not device_type:
                 logger.error(f"Unknown group '{group}' for device {device['name']}")
                 continue
+
             try:
                 commands_file = get_config_commands(device_type)
                 commands = load_commands(commands_file)
             except Exception as e:
                 logger.error(f"Command file loading failed for {device['name']}: {e}")
                 continue
-            #futures.append(executor.submit(run_config_task, device, commands, device_type)
-            executor.submit(device_worker, run_config_task, device, commands, device_type)
+            
+            future = executor.submit(device_worker, run_config_task, device, commands, device_type)
+            futures.append(future)
 
         for future in as_completed(futures):
             results.append(future.result())

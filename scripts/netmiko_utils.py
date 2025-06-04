@@ -93,7 +93,7 @@ def _get_reload_time(hour, minute, reload_times):
         return before
     else:
         return after
-    
+
 
 def get_device_inventory(device, device_type):
     """Retrieves the inventory information from a network device using Netmiko."""

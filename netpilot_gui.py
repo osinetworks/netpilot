@@ -9,7 +9,7 @@ from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
-# --- Sidebar menü ile sayfa seçimi ---
+# --- Side Bar ---
 page = st.sidebar.selectbox(
     "Select Page",
     ("Main", "Show Backup Files"),
@@ -37,14 +37,14 @@ def show_backup_files():
             file_name=fname,
             mime="text/plain"
         )
-        # Uncomment below to show file content:
-        # with st.expander(f"Show content of {fname}"):
-        #     st.code(file_bytes.decode(errors='replace'))
+        # To show file content:
+        with st.expander(f"Show content of {fname}"):
+            st.code(file_bytes.decode(errors='replace'))
 
 # --- Main PAGE ---
 if page == "Main":
     st.title("Netpilot Automation Suite")
-    st.markdown("A simple web-based automation panel for your network tasks and inventory upload.")
+    st.markdown("A simple web-based automation panel for your network tasks.")
 
     log_panel = st.empty()
 
