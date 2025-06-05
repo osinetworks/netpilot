@@ -51,11 +51,33 @@ project-root/
 
 ## Usage
 
+For script version:
 Run an automation task (e.g., configuration deployment):
-
 <pre> ```bash python main.py --task config ``` </pre>
 <pre> ```bash python main.py --task backup ``` </pre>
 
+For text gui version:
+<pre> ```bash python main_tui.py ``` </pre>
+
+For Web gui version:
+web interface can be reached via Network URL: http://<ip_address or hostname>:8501
+It is possible to redirect port 8501 to 80 via nginx
+<pre> ```bash streamlit run netpilot_gui.py ``` </pre>
+
+Nginx reverse proxy configuration
+<pre>
+server {
+    listen 80;
+    server_name osinetworks.lab;
+    location / {
+        proxy_pass http://localhost:8501/;
+        proxy_http_version 1.1;
+	      proxy_set_header Upgrade $http_upgrade;
+	      proxy_set_header Connection "upgrade";
+        include proxy_params;
+    }
+}
+</pre>
 ---
 
 ## GUI Alternatives
