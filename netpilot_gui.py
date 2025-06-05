@@ -7,7 +7,7 @@ import yaml
 import io
 import os
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
-from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH, ERROR_LOG_PATH
+from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH, ERROR_LOG_PATH, CONFIG_RESULT_FILE_PATH
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
@@ -109,8 +109,6 @@ if page == "Main":
                 config_manager.main()
                 # After running, check if any device had a failure and inform user accordingly
                 try:
-                    import yaml
-                    from scripts.constants import CONFIG_RESULT_FILE_PATH
                     if os.path.exists(CONFIG_RESULT_FILE_PATH):
                         with open(CONFIG_RESULT_FILE_PATH, "r") as f:
                             results = yaml.safe_load(f)
@@ -127,12 +125,18 @@ if page == "Main":
                 log(f"Config Error: {e}", "error")
 
     with col2:
-        if st.button("Backup Devices"):
+        if st.button("Run Backup Task"):
             st.session_state["log_lines"] = []
-            log("Starting device backup...", "info")
+            log("Starting backup...", "info")
             try:
-                backup_manager.main()
-                log("Backup completed!", "success")
+                results, any_failed = backup_manager.main()
+                log("Backup collection completed!", "success")
+                if any_failed:
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.error("Some devices failed backup! Please check the error log in the 'Show Error Log' tab.")
+                else:
+                    log("Backup completed successfully!", "success")
+                    st.success("Backup completed successfully!")
             except Exception as e:
                 log(f"Backup Error: {e}", "error")
 
@@ -141,18 +145,30 @@ if page == "Main":
             st.session_state["log_lines"] = []
             log("Collecting inventory...", "info")
             try:
-                inventory_manager.main()
+                results, any_failed = inventory_manager.main()
                 log("Inventory collection completed!", "success")
+                if any_failed:
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.error("Some devices failed inventory collection! Please check the error log in the 'Show Error Log' tab.")
+                else:
+                    log("Inventory collection completed successfully!", "success")
+                    st.success("Inventory collection completed successfully!")
             except Exception as e:
                 log(f"Inventory Error: {e}", "error")
 
     with col4:
         if st.button("Firmware Upgrade"):
             st.session_state["log_lines"] = []
-            log("Firmware upgrade not implemented yet.", "warn")
+            log("Starting firmware upgrade.", "info")
             try:
-                firmware_manager.main()
+                results, any_failed = firmware_manager.main()
                 log("Firmware upgrade completed!", "success")
+                if any_failed:
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.error("Some devices failed firmware upgrade! Please check the error log in the 'Show Error Log' tab.")
+                else:
+                    log("Firmware upgrade completed successfully!", "success")
+                    st.success("Firmware upgrade completed successfully!")
             except Exception as e:
                 log(f"Firmware Error: {e}", "error")
 

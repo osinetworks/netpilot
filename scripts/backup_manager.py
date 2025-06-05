@@ -2,6 +2,14 @@ import os
 import yaml
 import logging
 
+from scripts.constants import (
+    DEVICES_FILE_PATH,
+    CONFIG_FILE_PATH,
+    GROUP_TO_DEVICE_TYPE,
+    OUTPUT_FOLDER,
+    ERROR_LOG_PATH,
+)
+
 # --- LOG HANDLER SETUP (EKLENDİ) ---
 os.makedirs("logs", exist_ok=True)
 
@@ -19,6 +27,16 @@ file_handler = logging.FileHandler('logs/debug.log')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
 logger.addHandler(file_handler)
+
+
+error_logger = logging.getLogger("backup_error_logger")
+error_logger.setLevel(logging.ERROR)
+error_handler = logging.FileHandler(ERROR_LOG_PATH)
+error_handler.setLevel(logging.ERROR)
+error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+if not error_logger.hasHandlers():
+    error_logger.addHandler(error_handler)
+
 # --- END OF LOG HANDLER SETUP ---
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -67,7 +85,10 @@ def backup_task(device, device_type):
         logger.info(f"Backup SUCCESS: {result['device']} ({ip}) Files: {files}")
     except Exception as e:
         result["output"] = str(e)
-        logger.error(f"Backup FAILED: {result['device']} ({ip}): {e}")
+        msg = f"Backup FAILED: {result['device']} ({ip}): {e}"
+        logger.error(msg)
+        error_logger.error(msg)
+
     return result
 
 
@@ -84,6 +105,7 @@ def main():
     os.makedirs(BACKUP_FOLDER_PATH, exist_ok=True)
 
     results = []
+    any_failed = False
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = []
         for device in devices:
@@ -91,18 +113,24 @@ def main():
             device_type = GROUP_TO_DEVICE_TYPE.get(group)
             if not device_type:
                 logger.error(f"Unknown group '{group}' for device {device['name']}")
+                error_logger.error(f"Unknown group '{group}' for device {device['name']}")
                 continue
-           #futures.append(executor.submit(backup_task, device, device_type))
-            executor.submit(device_worker, backup_task, device, device_type)
+            futures.append(executor.submit(backup_task, device, device_type))
 
         for future in as_completed(futures):
-            results.append(future.result())
+            res = future.result()
+            results.append(res)
+            if res.get("status") != "SUCCESS":
+                any_failed = True
 
     # Write results as YAML
-    output_file = BACKUP_RESULT_FILE_PATH
+    output_file = os.path.join(BACKUP_FOLDER_PATH, "backup_results.yaml")
     with open(output_file, "w") as f:
         yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
     logger.info(f"Backup results written to {output_file}")
+
+    # Return results and status
+    return results, any_failed
 
 
 if __name__ == "__main__":

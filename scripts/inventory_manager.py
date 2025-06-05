@@ -1,3 +1,5 @@
+# inventory_manager.py
+
 import os
 import yaml
 import logging
@@ -8,6 +10,7 @@ from scripts.constants import (
     CONFIG_FILE_PATH,
     GROUP_TO_DEVICE_TYPE,
     OUTPUT_FOLDER,
+    ERROR_LOG_PATH,
 )
 from scripts.netmiko_utils import get_device_inventory
 from scripts.worker import device_worker
@@ -20,6 +23,14 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
 logger.addHandler(console_handler)
+
+error_logger = logging.getLogger("inventory_error_logger")
+error_logger.setLevel(logging.ERROR)
+error_handler = logging.FileHandler(ERROR_LOG_PATH)
+error_handler.setLevel(logging.ERROR)
+error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+if not error_logger.hasHandlers():
+    error_logger.addHandler(error_handler)
 
 
 def inventory_task(device, device_type):
@@ -35,7 +46,9 @@ def inventory_task(device, device_type):
     ip = device.get("host")
     if not validate_ip(ip):
         result["output"] = f"Invalid IP address: {ip}"
-        logger.error(f"Invalid IP address for device {result['device']}: {ip}")
+        msg = f"Invalid IP address for device {result['device']}: {ip}"
+        logger.error(msg)
+        error_logger.error(msg)
         return result
     try:
         inventory = get_device_inventory(device, device_type)
@@ -44,7 +57,9 @@ def inventory_task(device, device_type):
         logger.info(f"Inventory SUCCESS: {result['device']} ({ip})")
     except Exception as e:
         result["output"] = str(e)
-        logger.error(f"Inventory FAILED: {result['device']} ({ip}): {e}")
+        msg = f"Inventory FAILED: {result['device']} ({ip}): {e}"
+        logger.error(msg)
+        error_logger.error(msg)
     return result
 
 
@@ -61,27 +76,40 @@ def main():
         return
 
     results = []
+    any_failed = False
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = []
         for device in devices:
             group = device.get("group")
             device_type = GROUP_TO_DEVICE_TYPE.get(group)
             if not device_type:
-                logger.error(f"Unknown group '{group}' for device {device['name']}")
+                msg = f"Unknown group '{group}' for device {device['name']}"
+                logger.error(msg)
+                error_logger.error(msg)
                 continue
+            futures.append(executor.submit(inventory_task, device, device_type))
 
-            future = executor.submit(device_worker, inventory_task, device, device_type)
-            futures.append(future)
-            
         for future in as_completed(futures):
-            results.append(future.result())
+            res = future.result()
+            results.append(res)
+            if res.get("status") != "SUCCESS":
+                any_failed = True
+            results.append(res)
 
     output_dir = os.path.join(OUTPUT_FOLDER, "inventory")
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "inventory_results.yaml")
     with open(output_file, "w") as f:
         yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
-    logger.info(f"Inventory results written to {output_file}")
 
+    if any_failed:
+        logger.warning("Some devices failed inventory collection! See error.log for details.")
+        print("Some devices failed inventory collection! See error.log for details.")
+    else:
+        logger.info("Inventory collection completed successfully!")
+        print("Inventory collection completed!")
+    
+    return results, any_failed
+    
 if __name__ == "__main__":
     main()
