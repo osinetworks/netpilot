@@ -1,13 +1,17 @@
 import os
 import hashlib
 from datetime import datetime
-from netmiko import ConnectHandler
+from datetime import time as t
+from netmiko import ConnectHandler, file_transfer
+from time import sleep
 from scripts.constants import (
     BACKUP_FOLDER_PATH,
     INVENTORY_COMMANDS_PATHS,
     BACKUP_COMMANDS_PATHS,
     CREDENTIALS_FILE_PATH,
+    FIRMWARE_CONFIG_PATH
 )
+from scripts.config_parser import load_yaml
 from utils.credentials_utils import load_credentials
 
 
@@ -85,7 +89,7 @@ def _get_reload_time(hour, minute, reload_times):
     after = reload_times["after"]
     h1, m1 = map(int, before.split(":"))
     h2, m2 = map(int, after.split(":"))
-    from datetime import time as t
+    
     current = t(hour, minute)
     before_time = t(h1, m1)
     after_time = t(h2, m2)
@@ -211,6 +215,36 @@ def detect_device_vendor(device):
         return "unknown"
 
 
+def firmware_upgrade_procedure(device, device_type, logger):
+    """
+    Dispatches firmware upgrade to the correct vendor procedure.
+    Loads firmware config, normalizes type, logs errors if unsupported.
+    """
+    from scripts.config_parser import load_yaml
+    from scripts.constants import FIRMWARE_CONFIG_PATH
+
+    # Load firmware config (firmware.yaml)
+    firmware_config = load_yaml(FIRMWARE_CONFIG_PATH)
+    if firmware_config is None:
+        logger.error("Firmware config file could not be loaded or is empty.")
+        return "Firmware config file could not be loaded or is empty."
+
+    fw_info = firmware_config.get(device_type)
+    if not fw_info:
+        logger.error(f"Firmware config for device_type '{device_type}' is missing in firmware.yaml.")
+        return f"Firmware config for device_type '{device_type}' is missing in firmware.yaml."
+
+    # Dispatch according to device_type
+    device_type = device_type.lower()
+    if device_type == "arista_eos":
+        return arista_firmware_procedure(device, fw_info, logger)
+    elif device_type == "cisco_ios":
+        return cisco_firmware_procedure(device, fw_info, logger)
+    else:
+        logger.error(f"Firmware upgrade not supported for device_type {device_type}.")
+        return f"Firmware upgrade not supported for device_type {device_type}."
+
+
 def arista_firmware_procedure(device, config, logger):
     """
     All steps for Arista firmware upgrade.
@@ -223,8 +257,7 @@ def arista_firmware_procedure(device, config, logger):
     - Sets/syncs clock
     - Schedules reload at specified time
     """
-    from netmiko import file_transfer
-    from time import sleep
+
     fw_path = config["firmware"]["file_path"]
     fw_name = config["firmware"]["file_name"]
     md5_path = config["firmware"]["md5sum_path"]
