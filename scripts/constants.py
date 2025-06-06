@@ -24,6 +24,12 @@ BACKUP_FOLDER_PATH = os.path.join(OUTPUT_FOLDER, "backup")
 # Output file path for config results
 BACKUP_RESULT_FILE_PATH = os.path.join(BACKUP_FOLDER_PATH, "backup_results.yaml")
 
+# Inventory folder path
+INVENTORY_FOLDER_PATH = os.path.join(OUTPUT_FOLDER, "inventory")
+
+# Output file path for inventory results
+INVENTORY_RESULT_FILE_PATH = os.path.join(INVENTORY_FOLDER_PATH, "inventory_results.yaml")
+
 # Devices YAML file path
 DEVICES_FILE_PATH = "config/devices.yaml"
 
