@@ -7,7 +7,14 @@ import yaml
 import io
 import os
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
-from scripts.constants import DEVICES_FILE_PATH, BACKUP_FOLDER_PATH, ERROR_LOG_PATH, CONFIG_RESULT_FILE_PATH
+from scripts.constants import (
+    DEVICES_FILE_PATH, 
+    BACKUP_FOLDER_PATH, 
+    ERROR_LOG_PATH, 
+    CONFIG_RESULT_FILE_PATH, 
+    COMMANDS_PATHS,
+    BACKUP_COMMANDS_PATHS
+)
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
@@ -210,25 +217,44 @@ if page == "Main":
                 yaml.dump(yaml_obj, f)
             st.success(f"devices.yaml saved to: {save_path}")
 
-    st.markdown("#### Upload arista_backup_commands.cfg")
-    arista_cmd = st.file_uploader("Upload arista_backup_commands.cfg", type=["cfg"])
-    if arista_cmd is not None:
-        from scripts.constants import COMMANDS_PATHS
-        arista_path = COMMANDS_PATHS.get("arista_eos", os.path.join("config", "commands", "arista_backup_commands.cfg"))
-        os.makedirs(os.path.dirname(arista_path), exist_ok=True)
-        with open(arista_path, "wb") as f:
-            f.write(arista_cmd.getvalue())
-        st.success(f"arista_backup_commands.cfg saved to: {arista_path}")
+    # Unified file uploader for config/backup commands
 
-    st.markdown("#### Upload cisco_backup_commands.cfg")
-    cisco_cmd = st.file_uploader("Upload cisco_backup_commands.cfg", type=["cfg"])
-    if cisco_cmd is not None:
-        from scripts.constants import COMMANDS_PATHS
-        cisco_path = COMMANDS_PATHS.get("cisco_ios", os.path.join("config", "commands", "cisco_backup_commands.cfg"))
-        os.makedirs(os.path.dirname(cisco_path), exist_ok=True)
-        with open(cisco_path, "wb") as f:
-            f.write(cisco_cmd.getvalue())
-        st.success(f"cisco_backup_commands.cfg saved to: {cisco_path}")
+    st.markdown("#### Upload Command File by Vendor and Type")
+
+    # Vendor selection from constants
+    vendors = list(set(list(COMMANDS_PATHS.keys()) + list(BACKUP_COMMANDS_PATHS.keys())))
+    vendor_labels = {v: v.replace("_eos", "").replace("_ios", "").capitalize() for v in vendors}
+    selected_vendor = st.selectbox("Select Vendor", vendors, format_func=lambda x: vendor_labels[x])
+
+    # File type selection
+    cmd_type = st.selectbox("Select File Type", ["Config", "Backup"])
+
+    # Determine expected filename and save path from constants
+    if cmd_type == "Config":
+        file_dict = COMMANDS_PATHS
+        file_type_label = "Config"
+    else:
+        file_dict = BACKUP_COMMANDS_PATHS
+        file_type_label = "Backup"
+
+    expected_filename = os.path.basename(file_dict[selected_vendor])
+
+    uploaded_cmd = st.file_uploader(
+        f"Upload {file_type_label} File (Expected: {expected_filename})", type=["cfg"], key="unified_cmd_upload"
+    )
+    if uploaded_cmd is not None:
+        # Filename check
+        if uploaded_cmd.name != expected_filename:
+            st.error(
+                f"Invalid file name: Please upload '{expected_filename}' for vendor '{vendor_labels[selected_vendor]}'!"
+            )
+        else:
+            save_path = file_dict[selected_vendor]
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, "wb") as f:
+                f.write(uploaded_cmd.getvalue())
+            st.success(f"{expected_filename} saved to: {save_path}")
+# --- Import necessary modules ---
 
 # --- Show Backup Files PAGE ---
 elif page == "Show Backup Files":

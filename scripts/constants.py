@@ -12,11 +12,44 @@ DEVICES_FILE_PATH = "config/devices.yaml"
 # Credentials file path
 CREDENTIALS_FILE_PATH = "config/credentials.yaml"
 
+# Devices YAML file path
+DEVICES_FILE_PATH = "config/devices.yaml"
+
+# Firmware config file path
+FIRMWARE_CONFIG_PATH = "config/firmware.yaml"
+
+# config commands folder path
+COMMANDS_FOLDER_PATH = "config/commands/"
+
+# Command file paths
+COMMANDS_FILE = {
+    "arista_eos": "arista_eos_config_commands.cfg",
+    "cisco_ios": "cisco_ios_config_commands.cfg",
+}
+
+# Command file paths for different device types
+COMMANDS_PATHS = {
+    "arista_eos": os.path.join(COMMANDS_FOLDER_PATH, COMMANDS_FILE["arista_eos"]),
+    "cisco_ios": os.path.join(COMMANDS_FOLDER_PATH, COMMANDS_FILE["cisco_ios"]),
+}
+
 # Output folder path
 OUTPUT_FOLDER = "output/"
 
 # Output file path for config results
 CONFIG_RESULT_FILE_PATH = os.path.join(OUTPUT_FOLDER, "config", "config_results.yaml")
+
+# BACKUP file paths
+BACKUP_COMMANDS_FILE = {
+    "arista_eos": "arista_backup_commands.cfg",
+    "cisco_ios": "cisco_ios_backup_commands.cfg",
+}
+
+# Backup command file paths
+BACKUP_COMMANDS_PATHS = {
+    "arista_eos": os.path.join(COMMANDS_FOLDER_PATH, BACKUP_COMMANDS_FILE["arista_eos"]),
+    "cisco_ios": os.path.join(COMMANDS_FOLDER_PATH, BACKUP_COMMANDS_FILE["cisco_ios"]),
+}
 
 # Backup folder path
 BACKUP_FOLDER_PATH = os.path.join(OUTPUT_FOLDER, "backup")
@@ -29,12 +62,6 @@ INVENTORY_FOLDER_PATH = os.path.join(OUTPUT_FOLDER, "inventory")
 
 # Output file path for inventory results
 INVENTORY_RESULT_FILE_PATH = os.path.join(INVENTORY_FOLDER_PATH, "inventory_results.yaml")
-
-# Devices YAML file path
-DEVICES_FILE_PATH = "config/devices.yaml"
-
-# Firmware config file path
-FIRMWARE_CONFIG_PATH = "config/firmware.yaml"
 
 # Log folder path
 LOG_FOLDER = "logs/"
@@ -51,22 +78,11 @@ DEBUG_LOG_PATH = os.path.join(LOG_FOLDER, "debug.log")
 # Firmware update folder path
 FIRMWARE_FOLDER = "firmware/"
 
-# Command file paths
-COMMANDS_PATHS = {
-    "arista_eos": "config/commands/arista_config_commands.cfg",
-    "cisco_ios": "config/commands/cisco_config_commands.cfg",
-}
 
 # Inventory command file paths
 INVENTORY_COMMANDS_PATHS = {
     "arista_eos": "config/commands/arista_inventory_commands.cfg",
     "cisco_ios": "config/commands/cisco_inventory_commands.cfg",
-}
-
-# Backup command file paths
-BACKUP_COMMANDS_PATHS = {
-    "arista_eos": "config/commands/arista_backup_commands.cfg",
-    "cisco_ios": "config/commands/cisco_backup_commands.cfg",
 }
 
 # Group to device_type mapping

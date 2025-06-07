@@ -2,13 +2,20 @@ import os
 import yaml
 import logging
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from scripts.constants import (
     DEVICES_FILE_PATH,
-    CONFIG_FILE_PATH,
     GROUP_TO_DEVICE_TYPE,
-    OUTPUT_FOLDER,
+    BACKUP_FOLDER_PATH,
+    BACKUP_RESULT_FILE_PATH,
     ERROR_LOG_PATH,
+    OUTPUT_FOLDER,
 )
+
+from scripts.netmiko_utils import backup_device_config
+from scripts.worker import device_worker
+from scripts.config_parser import load_yaml
+from utils.network_utils import validate_ip
 
 # --- LOG HANDLER SETUP (EKLENDİ) ---
 os.makedirs("logs", exist_ok=True)
@@ -38,21 +45,6 @@ if not error_logger.hasHandlers():
     error_logger.addHandler(error_handler)
 
 # --- END OF LOG HANDLER SETUP ---
-
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from scripts.constants import (
-    DEVICES_FILE_PATH,
-    GROUP_TO_DEVICE_TYPE,
-    BACKUP_FOLDER_PATH,
-    BACKUP_RESULT_FILE_PATH,
-    DEVICES_FILE_PATH,
-    GROUP_TO_DEVICE_TYPE,
-)
-
-from scripts.netmiko_utils import backup_device_config
-from scripts.worker import device_worker
-from scripts.config_parser import load_yaml
-from utils.network_utils import validate_ip
 
 logger = logging.getLogger("backup_manager")
 logger.setLevel(logging.INFO)
