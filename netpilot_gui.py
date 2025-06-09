@@ -238,26 +238,53 @@ if page == "Main":
         file_type_label = "Backup"
 
     expected_filename = os.path.basename(file_dict[selected_vendor])
+    save_path = file_dict[selected_vendor]
 
+    # Show existing commands if file exists
+    existing_content = ""
+    if os.path.exists(save_path):
+        with open(save_path, "r") as f:
+            existing_content = f.read()
+
+    # Editable text area with existing content (can be empty)
+    st.markdown(f"##### Edit current {file_type_label} commands for {vendor_labels[selected_vendor]}")
+    updated_content = st.text_area(
+        f"Commands in {expected_filename}",
+        value=existing_content,
+        height=200,
+        key=f"{selected_vendor}_{cmd_type}_editor"
+    )
+
+    # Save edited commands button
+    if st.button(f"Save {file_type_label} Commands"):
+        try:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, "w") as f:
+                f.write(updated_content)
+            st.success(f"{expected_filename} saved to: {save_path}")
+        except Exception as e:
+            st.error(f"Failed to save file: {e}")
+
+    # File uploader for config/backup commands
     uploaded_cmd = st.file_uploader(
-        f"Upload {file_type_label} File (Expected: {expected_filename})", type=["cfg"], key="unified_cmd_upload"
+        f"Upload {file_type_label} File (Expected: {expected_filename})", type=["cfg"], key=f"upload_{selected_vendor}_{cmd_type}"
     )
     if uploaded_cmd is not None:
-        # Filename check
         if uploaded_cmd.name != expected_filename:
-            st.error(
-                f"Invalid file name: Please upload '{expected_filename}' for vendor '{vendor_labels[selected_vendor]}'!"
-            )
+            st.error(f"Invalid file name: Please upload '{expected_filename}' for vendor '{vendor_labels[selected_vendor]}'!")
         else:
-            save_path = file_dict[selected_vendor]
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            with open(save_path, "wb") as f:
-                f.write(uploaded_cmd.getvalue())
-            st.success(f"{expected_filename} saved to: {save_path}")
-# --- Import necessary modules ---
+            try:
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                with open(save_path, "wb") as f:
+                    f.write(uploaded_cmd.getvalue())
+                st.success(f"{expected_filename} saved to: {save_path}")
+            except Exception as e:
+                st.error(f"Failed to save file: {e}")
 
+  
 # --- Show Backup Files PAGE ---
 elif page == "Show Backup Files":
     show_backup_files()
+# --- Show Error Log PAGE ---
 elif page == "Show Error Log":
     show_error_log()
