@@ -180,9 +180,9 @@ if page == "Main":
                 log(f"Firmware Error: {e}", "error")
 
     st.markdown("---")
-
+    st.markdown("### Log Tasks")
     col1, col2, col3, col4 = st.columns([2, 10, 1, 1])
-
+    # --- LOG PANEL ---    
     with col1:
         if st.button("Clear Log"):
             st.session_state["log_lines"] = []
