@@ -22,15 +22,15 @@ FIRMWARE_CONFIG_PATH = "config/firmware.yaml"
 COMMANDS_FOLDER_PATH = "config/commands/"
 
 # Command file paths
-COMMANDS_FILE = {
+CONFIG_COMMANDS_FILE = {
     "arista_eos": "arista_eos_config_commands.cfg",
     "cisco_ios": "cisco_ios_config_commands.cfg",
 }
 
 # Command file paths for different device types
-COMMANDS_PATHS = {
-    "arista_eos": os.path.join(COMMANDS_FOLDER_PATH, COMMANDS_FILE["arista_eos"]),
-    "cisco_ios": os.path.join(COMMANDS_FOLDER_PATH, COMMANDS_FILE["cisco_ios"]),
+CONFIG_COMMANDS_PATHS = {
+    "arista_eos": os.path.join(COMMANDS_FOLDER_PATH, CONFIG_COMMANDS_FILE["arista_eos"]),
+    "cisco_ios": os.path.join(COMMANDS_FOLDER_PATH, CONFIG_COMMANDS_FILE["cisco_ios"]),
 }
 
 # Output folder path

@@ -12,7 +12,7 @@ from scripts.constants import (
     BACKUP_FOLDER_PATH, 
     ERROR_LOG_PATH, 
     CONFIG_RESULT_FILE_PATH, 
-    COMMANDS_PATHS,
+    CONFIG_COMMANDS_PATHS,
     BACKUP_COMMANDS_PATHS
 )
 
@@ -222,7 +222,7 @@ if page == "Main":
     st.markdown("#### Upload Command File by Vendor and Type")
 
     # Vendor selection from constants
-    vendors = list(set(list(COMMANDS_PATHS.keys()) + list(BACKUP_COMMANDS_PATHS.keys())))
+    vendors = list(set(list(CONFIG_COMMANDS_PATHS.keys()) + list(BACKUP_COMMANDS_PATHS.keys())))
     vendor_labels = {v: v.replace("_eos", "").replace("_ios", "").capitalize() for v in vendors}
     selected_vendor = st.selectbox("Select Vendor", vendors, format_func=lambda x: vendor_labels[x])
 
@@ -231,7 +231,7 @@ if page == "Main":
 
     # Determine expected filename and save path from constants
     if cmd_type == "Config":
-        file_dict = COMMANDS_PATHS
+        file_dict = CONFIG_COMMANDS_PATHS
         file_type_label = "Config"
     else:
         file_dict = BACKUP_COMMANDS_PATHS

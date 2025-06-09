@@ -7,9 +7,7 @@ from scripts.constants import (
     DEVICES_FILE_PATH,
     GROUP_TO_DEVICE_TYPE,
     BACKUP_FOLDER_PATH,
-    BACKUP_RESULT_FILE_PATH,
     ERROR_LOG_PATH,
-    OUTPUT_FOLDER,
 )
 
 from scripts.netmiko_utils import backup_device_config

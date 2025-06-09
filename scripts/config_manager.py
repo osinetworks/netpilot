@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from scripts.constants import (
     CONFIG_FILE_PATH,
     DEVICES_FILE_PATH,
-    COMMANDS_PATHS,
+    CONFIG_COMMANDS_PATHS,
     GROUP_TO_DEVICE_TYPE,
     INFO_LOG_PATH,
     DEBUG_LOG_PATH,
@@ -55,7 +55,7 @@ logger.addHandler(error_handler)
 def get_config_commands(device_type):
     """Return config commands file path according to device type."""
     try:
-        return COMMANDS_PATHS[device_type]
+        return CONFIG_COMMANDS_PATHS[device_type]
     except KeyError:
         raise ValueError(f"Unsupported device_type: {device_type}")
 
