@@ -10,13 +10,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scripts.constants import (
     DEVICES_FILE_PATH,
-    OUTPUT_FOLDER,
     GROUP_TO_DEVICE_TYPE,
     BACKUP_FOLDER_PATH,
     BACKUP_RESULT_FILE_PATH,
-    DEBUG_LOG_PATH,
-    INFO_LOG_PATH,
-    ERROR_LOG_PATH,
 )
 
 from scripts.netmiko_utils import backup_device_config
