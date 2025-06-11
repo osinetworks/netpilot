@@ -1,12 +1,21 @@
+# backup_manager.py
+# -*- coding: utf-8 -*-
+# This file is part of the Network Automation Suite.
+
 import os
 import yaml
 import logging
-
+from filelock import FileLock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from scripts.constants import (
     DEVICES_FILE_PATH,
+    OUTPUT_FOLDER,
     GROUP_TO_DEVICE_TYPE,
     BACKUP_FOLDER_PATH,
+    BACKUP_RESULT_FILE_PATH,
+    DEBUG_LOG_PATH,
+    INFO_LOG_PATH,
     ERROR_LOG_PATH,
 )
 
@@ -14,45 +23,20 @@ from scripts.netmiko_utils import backup_device_config
 from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
 from utils.network_utils import validate_ip
+from utils.logger_utils import logger_handler
 
-# --- LOG HANDLER SETUP (EKLENDİ) ---
+
+# --- Create logs directory if it doesn't exist ---
 os.makedirs("logs", exist_ok=True)
 
-logger = logging.getLogger("backup_manager")
-logger.setLevel(logging.DEBUG) # Set to DEBUG to capture all logs
-
-# Console Handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-logger.addHandler(console_handler)
-
-# File Handler (Debug)
-file_handler = logging.FileHandler('logs/debug.log')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-logger.addHandler(file_handler)
-
-
-error_logger = logging.getLogger("backup_error_logger")
-error_logger.setLevel(logging.ERROR)
-error_handler = logging.FileHandler(ERROR_LOG_PATH)
-error_handler.setLevel(logging.ERROR)
-error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-if not error_logger.hasHandlers():
-    error_logger.addHandler(error_handler)
-
-# --- END OF LOG HANDLER SETUP ---
-
-logger = logging.getLogger("backup_manager")
-logger.setLevel(logging.INFO)
+# --- Logger Setup ---
+logger = logger_handler("backup_manager")
 
 
 def backup_task(device, device_type):
     """Backup running and startup config from a single device."""
 
     logger.info(f"Starting backup for {device.get('name')}")
-
     result = {
         "device": device.get("name", "UNKNOWN"),
         "host": device.get("host", "UNKNOWN"),
@@ -77,7 +61,6 @@ def backup_task(device, device_type):
         result["output"] = str(e)
         msg = f"Backup FAILED: {result['device']} ({ip}): {e}"
         logger.error(msg)
-        error_logger.error(msg)
 
     return result
 
@@ -103,10 +86,9 @@ def main():
             device_type = GROUP_TO_DEVICE_TYPE.get(group)
             if not device_type:
                 logger.error(f"Unknown group '{group}' for device {device['name']}")
-                error_logger.error(f"Unknown group '{group}' for device {device['name']}")
                 continue
             futures.append(executor.submit(backup_task, device, device_type))
-
+        
         for future in as_completed(futures):
             res = future.result()
             results.append(res)
@@ -114,11 +96,18 @@ def main():
                 any_failed = True
 
     # Write results as YAML
-    output_file = os.path.join(BACKUP_FOLDER_PATH, "backup_results.yaml")
-    with open(output_file, "w") as f:
-        yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
-    logger.info(f"Backup results written to {output_file}")
 
+    output_file = BACKUP_RESULT_FILE_PATH
+    lock_file = f"{output_file}.lock"
+    lock = FileLock(lock_file)
+    with lock:
+        with open(output_file, "w") as f:
+            yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
+        logger.info(f"Backup results written to {output_file}")
+
+    if os.path.exists(lock_file):
+        os.remove(lock_file)
+        
     # Return results and status
     return results, any_failed
 

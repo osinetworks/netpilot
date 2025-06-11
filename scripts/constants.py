@@ -105,5 +105,13 @@ SUPPORTED_TASKS = [
     "firmware",
 ]
 
+
+CONFIG_BUTTON = "Run Config Task"
+BACKUP_BUTTON = "Run Backup Task"
+INVENTORY_BUTTON = "Run Inventory Task"
+FIRMWARE_BUTTON = "Run Firmware Task"
+CLEAR_LOGS_BUTTON = "Clear Log"
+SHOW_ERRORS_BUTTON = "Show Error Logs"
+
 # Default device IP. Change this to the IP of your device. This is used for testing purposes.
 DEFAULT_DEVICE_IP = "172.20.20.101"

@@ -1,11 +1,15 @@
 # config_manager.py
+# -*- coding: utf-8 -*-
+# This file is part of the Network Automation Suite.
 
 import yaml
 import logging
 import ipaddress
 import socket
 import os
+from filelock import FileLock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from scripts.constants import (
     CONFIG_FILE_PATH,
     DEVICES_FILE_PATH,
@@ -30,26 +34,30 @@ logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all logs
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-logger.addHandler(console_handler)
+if not logger.hasHandlers():
+    logger.addHandler(console_handler)
 
 # Info log handler
 info_handler = logging.FileHandler(INFO_LOG_PATH)
 info_handler.setLevel(logging.INFO)
 info_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
 info_handler.addFilter(lambda record: record.levelno == logging.INFO)
-logger.addHandler(info_handler)
+if not logger.hasHandlers():
+    logger.addHandler(info_handler)
 
 # Debug log handler
 debug_handler = logging.FileHandler(DEBUG_LOG_PATH)
 debug_handler.setLevel(logging.DEBUG)
 debug_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-logger.addHandler(debug_handler)
+if not logger.hasHandlers():
+    logger.addHandler(debug_handler)
 
 # Error log handler
 error_handler = logging.FileHandler(ERROR_LOG_PATH)
 error_handler.setLevel(logging.WARNING)
 error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-logger.addHandler(error_handler)
+if not logger.hasHandlers():
+    logger.addHandler(error_handler)
 
 
 def get_config_commands(device_type):
@@ -143,6 +151,7 @@ def main():
         return
 
     results = []
+    any_failed = False
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = []
         for device in devices:
@@ -162,15 +171,16 @@ def main():
             future = executor.submit(device_worker, run_config_task, device, commands, device_type)
             futures.append(future)
 
-        for future in as_completed(futures):
-            results.append(future.result())
-
     output_file = CONFIG_RESULT_FILE_PATH
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    with open(output_file, "w") as f:
-        yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
-    logger.info(f"Config deployment results written to {output_file}")
+    lock_file = f"{output_file}.lock"
+    lock = FileLock(lock_file)
+    with lock:
+        with open(output_file, "w") as f:
+            yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
+        logger.info(f"Config deployment results written to {output_file}")
 
+    if os.path.exists(lock_file):
+        os.remove(lock_file)
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,54 @@
 
+import logging
+import os
+from scripts.constants import (
+    DEBUG_LOG_PATH,
+    INFO_LOG_PATH,
+    ERROR_LOG_PATH,
+)
+
+def logger_handler(handler_name):
+    """
+    Logger setup for the backup manager.
+    Creates a logger with handlers for console, debug, info, and error logs.
+    """
+
+    # -----------------------------------------------------------------------------
+    # --- Create logs directory if it doesn't exist ---
+    os.makedirs("logs", exist_ok=True)
+
+    # --- Logger Setup ---
+    logger = logging.getLogger(handler_name)
+    logger.setLevel(logging.DEBUG)
+
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+
+    debug_handler = logging.FileHandler(DEBUG_LOG_PATH)
+    debug_handler.setLevel(logging.DEBUG)
+    debug_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+
+    info_handler = logging.FileHandler(INFO_LOG_PATH)
+    info_handler.setLevel(logging.INFO)
+    info_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+
+    error_handler = logging.FileHandler(ERROR_LOG_PATH)
+    error_handler.setLevel(logging.WARNING)
+    error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+
+    logger.addHandler(console_handler)
+    logger.addHandler(debug_handler)
+    logger.addHandler(info_handler)
+    logger.addHandler(error_handler)
+
+    # --- End Logger Setup ---
+    return logger
+
+
 # -----------------------------------------------------------------------------
 def log_error(output):
     """

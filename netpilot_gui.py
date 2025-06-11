@@ -13,7 +13,13 @@ from scripts.constants import (
     ERROR_LOG_PATH, 
     CONFIG_RESULT_FILE_PATH, 
     CONFIG_COMMANDS_PATHS,
-    BACKUP_COMMANDS_PATHS
+    BACKUP_COMMANDS_PATHS,
+    CONFIG_BUTTON,
+    BACKUP_BUTTON,
+    INVENTORY_BUTTON,
+    FIRMWARE_BUTTON,
+    CLEAR_LOGS_BUTTON,
+    SHOW_ERRORS_BUTTON,
 )
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
@@ -126,22 +132,22 @@ if page == "Main":
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button("Run Config Task"):
-            selected_button = "Run Config Task"
+        if st.button(CONFIG_BUTTON):
+            selected_button = CONFIG_BUTTON
 
     with col2:
-        if st.button("Run Backup Task"):
-            selected_button = "Run Backup Task"
+        if st.button(BACKUP_BUTTON):
+            selected_button = BACKUP_BUTTON
 
     with col3:
-        if st.button("Inventory Collection"):
-            selected_button = "Inventory Collection"
+        if st.button(INVENTORY_BUTTON):
+            selected_button = INVENTORY_BUTTON
 
     with col4:
-        if st.button("Firmware Upgrade"):
-            selected_button = "Firmware Upgrade"
+        if st.button(FIRMWARE_BUTTON):
+            selected_button = FIRMWARE_BUTTON
 
-    if selected_button == "Run Config Task":
+    if selected_button == CONFIG_BUTTON:
         st.session_state["log_lines"] = []
         st.info("Starting config deployment...")
         log("Starting config deployment...", "info")
@@ -177,7 +183,7 @@ if page == "Main":
             with st.expander("Show Error Log", expanded=True):
                 display_error_log()
 
-    elif selected_button == "Run Backup Task":
+    elif selected_button == BACKUP_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting backup...", "info")
         try:
@@ -192,7 +198,7 @@ if page == "Main":
         except Exception as e:
             log(f"Backup Error: {e}", "error")
 
-    elif selected_button == "Inventory Collection":
+    elif selected_button == INVENTORY_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting inventory collection...", "info")
         try:
@@ -206,8 +212,8 @@ if page == "Main":
                 st.success("Inventory collection completed successfully!")
         except Exception as e:
             log(f"Inventory Error: {e}", "error")
-    
-    elif selected_button == "Firmware Upgrade":
+
+    elif selected_button == FIRMWARE_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting firmware upgrade...", "info")
         try:
@@ -229,12 +235,12 @@ if page == "Main":
     # --- LOG PANEL ---
     col1, col2, col3, col4 = st.columns([2, 10, 1, 1])
     with col1:
-        if st.button("Clear Log"):
+        if st.button(CLEAR_LOGS_BUTTON):
             st.session_state["log_lines"] = []
             log_panel.markdown("Log cleared.")
 
     with col2:
-        if st.button("Show Error Log"):
+        if st.button(SHOW_ERRORS_BUTTON):
             show_error_log()
 
     # --- CSV TO YAML & COMMAND FILE UPLOAD PANEL ---
