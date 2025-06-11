@@ -20,10 +20,6 @@ from scripts.config_parser import load_yaml
 from utils.network_utils import validate_ip
 from utils.logger_utils import logger_handler
 
-
-# --- Create logs directory if it doesn't exist ---
-os.makedirs("logs", exist_ok=True)
-
 # --- Logger Setup ---
 logger = logger_handler("backup_manager")
 
