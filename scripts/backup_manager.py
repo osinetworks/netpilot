@@ -4,7 +4,6 @@
 
 import os
 import yaml
-import logging
 from filelock import FileLock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
