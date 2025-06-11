@@ -63,6 +63,24 @@ INVENTORY_FOLDER_PATH = os.path.join(OUTPUT_FOLDER, "inventory")
 # Output file path for inventory results
 INVENTORY_RESULT_FILE_PATH = os.path.join(INVENTORY_FOLDER_PATH, "inventory_results.yaml")
 
+# Inventory command file paths
+INVENTORY_COMMANDS_FILE = {
+    "arista_eos": "arista_eos_inventory?commands.cfg",
+    "cisco_ios": "cisco_ios_inventory_commands.cfg",
+}
+
+# Inventory command file paths for different device types
+INVENTORY_COMMANDS_PATHS = {
+    "arista_eos": os.path.join(COMMANDS_FOLDER_PATH, INVENTORY_COMMANDS_FILE["arista_eos"]),
+    "cisco_ios": os.path.join(COMMANDS_FOLDER_PATH, INVENTORY_COMMANDS_FILE["cisco_ios"]),
+}
+
+# Firmware update folder path
+FIRMWARE_FOLDER = "firmware/"
+
+# Output file path for firmware results
+FIRMWARE_RESULT_FILE_PATH = os.path.join(FIRMWARE_FOLDER, "firmware_results.yaml")
+
 # Log folder path
 LOG_FOLDER = "logs/"
 
@@ -74,16 +92,6 @@ INFO_LOG_PATH = os.path.join(LOG_FOLDER, "info.log")
 
 # Debug Log path
 DEBUG_LOG_PATH = os.path.join(LOG_FOLDER, "debug.log")
-
-# Firmware update folder path
-FIRMWARE_FOLDER = "firmware/"
-
-
-# Inventory command file paths
-INVENTORY_COMMANDS_PATHS = {
-    "arista_eos": "config/commands/arista_inventory_commands.cfg",
-    "cisco_ios": "config/commands/cisco_inventory_commands.cfg",
-}
 
 # Group to device_type mapping
 GROUP_TO_DEVICE_TYPE = {

@@ -17,7 +17,7 @@ from scripts.constants import (
 from scripts.netmiko_utils import push_config_to_device
 from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
-from utils.network_utils import validate_ip, is_reachable
+from utils.network_utils import validate_devices, validate_ip, is_reachable
 from utils.logger_utils import logger_handler
 
 # --- Logger Setup ---
@@ -73,32 +73,6 @@ def run_config_task(device, commands, device_type):
     return result
 
 
-def validate_devices(devices):
-    """
-    Validate devices.yaml for required keys and 
-    check for comma instead of dot errors in IP.
-    Returns a list of valid devices.
-    """
-
-    valid_devices = []
-    for dev in devices:
-        if "name" not in dev or "host" not in dev or "group" not in dev:
-            logger.error(f"Missing fields in device entry: {dev}")
-            continue
-
-        ip = dev["host"]
-        if "," in ip:
-            logger.error(f"Possible comma instead of dot in IP address: {ip} (device {dev['name']})")
-            continue
-
-        if not validate_ip(ip):
-            logger.error(f"Invalid IP address format: {ip} (device {dev['name']})")
-            continue
-
-        valid_devices.append(dev)
-    return valid_devices
-
-
 def main():
     """Main function to load config, devices, and run tasks in parallel."""
     
@@ -109,9 +83,10 @@ def main():
     devices_yaml = load_yaml(DEVICES_FILE_PATH)
     devices = devices_yaml.get("devices", [])
 
-    devices = validate_devices(devices)
+    devices = validate_devices(devices, logger)
+
     if not devices:
-        logger.critical("No valid devices found. Exiting.")
+        logger.error("No valid devices found. Exiting.")
         return
 
     results = []

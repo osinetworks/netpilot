@@ -13,6 +13,7 @@ from scripts.constants import (
     ERROR_LOG_PATH, 
     CONFIG_RESULT_FILE_PATH, 
     CONFIG_COMMANDS_PATHS,
+    BACKUP_RESULT_FILE_PATH,
     BACKUP_COMMANDS_PATHS,
     CONFIG_BUTTON,
     BACKUP_BUTTON,
@@ -20,6 +21,8 @@ from scripts.constants import (
     FIRMWARE_BUTTON,
     CLEAR_LOGS_BUTTON,
     SHOW_ERRORS_BUTTON,
+    INVENTORY_RESULT_FILE_PATH,
+    FIRMWARE_RESULT_FILE_PATH,
 )
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
@@ -30,6 +33,27 @@ page = st.sidebar.selectbox(
     ("Main", "Show Backup Files", "Show Error Log"),
     index=0
 )
+
+def display_output(msg, results):
+
+    failed_devices = [r for r in results if r.get("status") == "FAILED"]
+    successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
+    if failed_devices:
+        st.error(f"Some devices failed! Please check the error log below.")
+        log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+        st.write("Successful Devices:")
+        for dev in successful_devices:
+            st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
+
+        st.write("Failed Devices:")
+        for dev in failed_devices:
+            st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
+                    
+            with st.expander("Show Error Log", expanded=True):
+                display_error_log()
+    else:
+        st.success(msg)
+        log("msg", "success")
 
 
 # --- Display Error Log PAGE ---
@@ -185,51 +209,111 @@ if page == "Main":
 
     elif selected_button == BACKUP_BUTTON:
         st.session_state["log_lines"] = []
+        st.info("Starting backup...")
         log("Starting backup...", "info")
         try:
-            results, any_failed = backup_manager.main()
-            log("Backup completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed backup! Please check the error log in the 'Show Error Log' tab.")
-            else:
-                log("Backup completed successfully!", "success")
-                st.success("Backup completed successfully!")
-        except Exception as e:
-            log(f"Backup Error: {e}", "error")
+            backup_manager.main()
+            # After running, check if any device had a failure and inform user accordingly
+            if os.path.exists(BACKUP_RESULT_FILE_PATH):
+                with open(BACKUP_RESULT_FILE_PATH, 'r') as f:
+                    results = yaml.safe_load(f) or []
 
+                failed_devices = [r for r in results if r.get("status") == "FAILED"]
+                successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
+                if failed_devices:
+                    st.error(f"Some devices failed! Please check the error log below.")
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.write("Successful Devices:")
+                    for dev in successful_devices:
+                        st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
+
+                    st.write("Failed Devices:")
+                    for dev in failed_devices:
+                        st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
+                    
+                    with st.expander("Show Error Log", expanded=True):
+                        display_error_log()
+                else:
+                    st.success("Backup completed successfully for all devices!")
+                    log("Backup completed successfully for all devices!", "success")
+            else:
+                st.success("Backup completed, but no result file found.")
+        except Exception as e:
+            st.error(f"Backup Error: {e}")
+            with st.expander("Show Error Log", expanded=True):
+                display_error_log()
+
+    # --- INVENTORY COLLECTION TASK ---
     elif selected_button == INVENTORY_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting inventory collection...", "info")
         try:
-            results, any_failed = inventory_manager.main()
-            log("Inventory collection completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed inventory collection! Please check the error log in the 'Show Error Log' tab.")
-            else:
-                log("Inventory collection completed successfully!", "success")
-                st.success("Inventory collection completed successfully!")
-        except Exception as e:
-            log(f"Inventory Error: {e}", "error")
+            inventory_manager.main()
+            # After running, check if any device had a failure and inform user accordingly
+            if os.path.exists(INVENTORY_RESULT_FILE_PATH):
+                with open(INVENTORY_RESULT_FILE_PATH, 'r') as f:
+                    results = yaml.safe_load(f) or []
 
+                failed_devices = [r for r in results if r.get("status") == "FAILED"]
+                successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
+                if failed_devices:
+                    st.error(f"Some devices failed! Please check the error log below.")
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.write("Successful Devices:")
+                    for dev in successful_devices:
+                        st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
+
+                    st.write("Failed Devices:")
+                    for dev in failed_devices:
+                        st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
+                    
+                    with st.expander("Show Error Log", expanded=True):
+                        display_error_log()
+                else:
+                    st.success("Inventory collection completed successfully for all devices!")
+                    log("Inventory collection completed successfully for all devices!", "success")
+            else:
+                st.success("Inventory collection completed, but no result file found.")
+        except Exception as e:
+            st.error(f"Inventory Error: {e}")
+            with st.expander("Show Error Log", expanded=True):
+                display_error_log()
+    
+    # --- FIRMWARE UPGRADE TASK ---
     elif selected_button == FIRMWARE_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting firmware upgrade...", "info")
         try:
-            results, any_failed = firmware_manager.main()
-            log("Firmware upgrade completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed firmware upgrade! Please check the error log in the 'Show Error Log' tab.")
+            firmware_manager.main()
+            # After running, check if any device had a failure and inform user accordingly
+            if os.path.exists(FIRMWARE_RESULT_FILE_PATH):
+                with open(FIRMWARE_RESULT_FILE_PATH, 'r') as f:
+                    results = yaml.safe_load(f) or []
+
+                failed_devices = [r for r in results if r.get("status") == "FAILED"]
+                successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
+                if failed_devices:
+                    st.error(f"Some devices failed! Please check the error log below.")
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.write("Successful Devices:")
+                    for dev in successful_devices:
+                        st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
+
+                    st.write("Failed Devices:")
+                    for dev in failed_devices:
+                        st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
+                    
+                    with st.expander("Show Error Log", expanded=True):
+                        display_error_log()
+                else:
+                    st.success("Firmware upgrade completed successfully for all devices!")
+                    log("Firmware upgrade completed successfully for all devices!", "success")
             else:
-                log("Firmware upgrade completed successfully!", "success")
-                st.success("Firmware upgrade completed successfully!")
+                st.success("Firmware upgrade completed, but no result file found.")
         except Exception as e:
-            log(f"Firmware Error: {e}", "error")
-    
-    else:
-        log("Select a task to run from the buttons above.", "info")
+            st.error(f"Firmware Upgrade Error: {e}")
+            with st.expander("Show Error Log", expanded=True):
+                display_error_log()
     
     st.markdown("---")
     # --- LOG PANEL ---

@@ -12,12 +12,13 @@ from scripts.constants import (
     GROUP_TO_DEVICE_TYPE,
     BACKUP_FOLDER_PATH,
     BACKUP_RESULT_FILE_PATH,
+    CONFIG_FILE_PATH,
 )
 
 from scripts.netmiko_utils import backup_device_config
 from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
-from utils.network_utils import validate_ip
+from utils.network_utils import validate_devices, validate_ip, is_reachable
 from utils.logger_utils import logger_handler
 
 # --- Logger Setup ---
@@ -59,18 +60,22 @@ def backup_task(device, device_type):
 def main():
     """Main function to handle backup tasks."""
 
+    config = load_yaml(CONFIG_FILE_PATH)
+    thread_params = config.get("thread_pools", {})
+    num_threads = thread_params.get("num_threads", 5)
+
     devices_yaml = load_yaml(DEVICES_FILE_PATH)
     devices = devices_yaml.get("devices", [])
 
+    devices = validate_devices(devices, logger)
     if not devices:
-        logger.critical("No devices found for backup.")
+        logger.error("No devices found for backup.")
         return
 
     os.makedirs(BACKUP_FOLDER_PATH, exist_ok=True)
 
     results = []
-    any_failed = False
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = []
         for device in devices:
             group = device.get("group")
@@ -81,13 +86,9 @@ def main():
             futures.append(executor.submit(backup_task, device, device_type))
         
         for future in as_completed(futures):
-            res = future.result()
-            results.append(res)
-            if res.get("status") != "SUCCESS":
-                any_failed = True
+            results.append(future.result())
 
     # Write results as YAML
-
     output_file = BACKUP_RESULT_FILE_PATH
     lock_file = f"{output_file}.lock"
     lock = FileLock(lock_file)
@@ -99,9 +100,6 @@ def main():
     if os.path.exists(lock_file):
         os.remove(lock_file)
         
-    # Return results and status
-    return results, any_failed
-
 
 if __name__ == "__main__":
     main()
