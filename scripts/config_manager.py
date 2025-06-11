@@ -165,7 +165,7 @@ def main():
         for future in as_completed(futures):
             results.append(future.result())
 
-    output_file = os.path.join(CONFIG_RESULT_FILE_PATH)
+    output_file = CONFIG_RESULT_FILE_PATH
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, "w") as f:
         yaml.dump(results, f, default_flow_style=False, allow_unicode=True)

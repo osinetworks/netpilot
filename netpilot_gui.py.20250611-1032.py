@@ -121,110 +121,101 @@ if page == "Main":
     if "log_lines" not in st.session_state:
         st.session_state["log_lines"] = []
 
-    # --- BACKUP, INVENTORY, FIRMWARE UPGRADE TASKS ---
     st.markdown("### Automation Tasks")
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         if st.button("Run Config Task"):
             selected_button = "Run Config Task"
+            st.session_state["log_lines"] = []
+            st.info("Starting config deployment...")
+            try:
+                config_manager.main()
+                # After running, check if any device had a failure and inform user accordingly
+                if os.path.exists(CONFIG_RESULT_FILE_PATH):
+                    with open(CONFIG_RESULT_FILE_PATH) as f:
+                        results = yaml.safe_load(f) or []
+                    failed_devices = [r for r in results if r.get("status") == "FAILED"]
+                    if failed_devices:
+                        st.error(f"Some devices failed! Please check the error log below.")
+                        with st.expander("Show Error Log", expanded=True):
+                            display_error_log()
+                        st.write("Failed Devices:")
+                        for dev in failed_devices:
+                            st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
+                    else:
+                        st.success("Configuration deployed successfully to all devices!")
+                else:
+                    st.success("Configuration deployed, but no result file found.")
+            except Exception as e:
+                st.error(f"Config Error: {e}")
+                with st.expander("Show Error Log", expanded=True):
+                    display_error_log()
 
+    # --- BACKUP, INVENTORY, FIRMWARE UPGRADE TASKS ---
     with col2:
         if st.button("Run Backup Task"):
-            selected_button = "Run Backup Task"
+            st.session_state["log_lines"] = []
+            log("Starting backup...", "info")
+            try:
+                results, any_failed = backup_manager.main()
+                log("Backup collection completed!", "success")
+                if any_failed:
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.error("Some devices failed backup! Please check the error log in the 'Show Error Log' tab.")
+                else:
+                    log("Backup completed successfully!", "success")
+                    st.success("Backup completed successfully!")
+            except Exception as e:
+                log(f"Backup Error: {e}", "error")
 
     with col3:
         if st.button("Inventory Collection"):
-            selected_button = "Inventory Collection"
+            st.session_state["log_lines"] = []
+            log("Collecting inventory...", "info")
+            try:
+                results, any_failed = inventory_manager.main()
+                log("Inventory collection completed!", "success")
+                if any_failed:
+                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
+                    st.error("Some devices failed inventory collection! Please check the error log in the 'Show Error Log' tab.")
+                else:
+                    log("Inventory collection completed successfully!", "success")
+                    st.success("Inventory collection completed successfully!")
+            except Exception as e:
+                log(f"Inventory Error: {e}", "error")
 
     with col4:
         if st.button("Firmware Upgrade"):
-            selected_button = "Firmware Upgrade"
-
-    if selected_button == "Run Config Task":
-        st.session_state["log_lines"] = []
-        st.info("Starting config deployment...")
-        log("Starting config deployment...", "info")
-        try:
-            config_manager.main()
-            # After running, check if any device had a failure and inform user accordingly
-            if os.path.exists(CONFIG_RESULT_FILE_PATH):
-                with open(CONFIG_RESULT_FILE_PATH, 'r') as f:
-                    results = yaml.safe_load(f) or []
-
-                failed_devices = [r for r in results if r.get("status") == "FAILED"]
-                successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
-                if failed_devices:
-                    st.error(f"Some devices failed! Please check the error log below.")
+            st.session_state["log_lines"] = []
+            log("Starting firmware upgrade.", "info")
+            try:
+                results, any_failed = firmware_manager.main()
+                log("Firmware upgrade completed!", "success")
+                if any_failed:
                     log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                    st.write("Successful Devices:")
-                    for dev in successful_devices:
-                        st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
-
-                    st.write("Failed Devices:")
-                    for dev in failed_devices:
-                        st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
-                    
-                    with st.expander("Show Error Log", expanded=True):
-                        display_error_log()
+                    st.error("Some devices failed firmware upgrade! Please check the error log in the 'Show Error Log' tab.")
                 else:
-                    st.success("Configuration deployed successfully to all devices!")
-                    log("Configuration deployed successfully to all devices!", "success")
-            else:
-                st.success("Configuration deployed, but no result file found.")
-        except Exception as e:
-            st.error(f"Config Error: {e}")
-            with st.expander("Show Error Log", expanded=True):
-                display_error_log()
+                    log("Firmware upgrade completed successfully!", "success")
+                    st.success("Firmware upgrade completed successfully!")
+            except Exception as e:
+                log(f"Firmware Error: {e}", "error")
 
-    elif selected_button == "Run Backup Task":
-        st.session_state["log_lines"] = []
-        log("Starting backup...", "info")
-        try:
-            results, any_failed = backup_manager.main()
-            log("Backup completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed backup! Please check the error log in the 'Show Error Log' tab.")
+    st.markdown("---")
+    if selected_button == "Run Config Task":
+        st.markdown("#### Configuration Deployment Results")
+        if os.path.exists(CONFIG_RESULT_FILE_PATH):
+            with open(CONFIG_RESULT_FILE_PATH, "r") as f:
+                results = yaml.safe_load(f) or []
+            if results:
+                st.write("Configuration deployment results:")
+                for res in results:
+                    status = "✅" if res.get("status") == "SUCCESS" else "❌"
+                    st.write(f"{status} {res.get('device')} ({res.get('host')}): {res.get('output')}")
             else:
-                log("Backup completed successfully!", "success")
-                st.success("Backup completed successfully!")
-        except Exception as e:
-            log(f"Backup Error: {e}", "error")
-
-    elif selected_button == "Inventory Collection":
-        st.session_state["log_lines"] = []
-        log("Starting inventory collection...", "info")
-        try:
-            results, any_failed = inventory_manager.main()
-            log("Inventory collection completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed inventory collection! Please check the error log in the 'Show Error Log' tab.")
-            else:
-                log("Inventory collection completed successfully!", "success")
-                st.success("Inventory collection completed successfully!")
-        except Exception as e:
-            log(f"Inventory Error: {e}", "error")
-    
-    elif selected_button == "Firmware Upgrade":
-        st.session_state["log_lines"] = []
-        log("Starting firmware upgrade...", "info")
-        try:
-            results, any_failed = firmware_manager.main()
-            log("Firmware upgrade completed!", "success")
-            if any_failed:
-                log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                st.error("Some devices failed firmware upgrade! Please check the error log in the 'Show Error Log' tab.")
-            else:
-                log("Firmware upgrade completed successfully!", "success")
-                st.success("Firmware upgrade completed successfully!")
-        except Exception as e:
-            log(f"Firmware Error: {e}", "error")
-    
-    else:
-        log("Select a task to run from the buttons above.", "info")
-    
+                st.info("No configuration deployment results found.")
+        else:
+            st.warning("No configuration result file found.")
     st.markdown("---")
     # --- LOG PANEL ---
     col1, col2, col3, col4 = st.columns([2, 10, 1, 1])
