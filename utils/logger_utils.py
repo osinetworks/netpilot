@@ -16,6 +16,7 @@ def logger_handler(handler_name):
     # -----------------------------------------------------------------------------
     # --- Create logs directory if it doesn't exist ---
     os.makedirs("logs", exist_ok=True)
+    print(f"handler_name = {handler_name}")
 
     # --- Logger Setup ---
     logger = logging.getLogger(handler_name)

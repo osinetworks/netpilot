@@ -103,7 +103,6 @@ def get_device_inventory(device, device_type):
     """Retrieves the inventory information from a network device using Netmiko."""
 
     commands_file = INVENTORY_COMMANDS_PATHS.get(device_type)
-    print(f"Using commands file: {commands_file}")
     if not commands_file:
         raise ValueError(f"No inventory commands file for device type {device_type}")
     commands = load_commands_from_file(commands_file)

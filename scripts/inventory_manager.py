@@ -60,7 +60,7 @@ def inventory_task(device, device_type):
     Task to collect inventory information from a device.
     Only returns a result dict if successful. Errors go to error.log.
     """
-    ip = device.get("host")
+    ip = device["host"]
     if not validate_ip(ip):
         msg = f"Invalid IP address: {ip}"
         logger.error(f"{device.get('name', 'UNKNOWN')} ({ip}): {msg}")

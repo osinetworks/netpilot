@@ -65,7 +65,7 @@ INVENTORY_RESULT_FILE_PATH = os.path.join(INVENTORY_FOLDER_PATH, "inventory_resu
 
 # Inventory command file paths
 INVENTORY_COMMANDS_FILE = {
-    "arista_eos": "arista_eos_inventory?commands.cfg",
+    "arista_eos": "arista_eos_inventory_commands.cfg",
     "cisco_ios": "cisco_ios_inventory_commands.cfg",
 }
 
