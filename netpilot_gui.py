@@ -6,6 +6,7 @@ import csv
 import yaml
 import io
 import os
+
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
 from scripts.constants import (
     DEVICES_FILE_PATH, 
@@ -59,6 +60,11 @@ def display_output(msg, results):
 # --- Display Error Log PAGE ---
 def display_error_log():
     st.subheader("Error Log")
+    if not os.path.exists(ERROR_LOG_PATH):
+        with open(ERROR_LOG_PATH, 'a') as f:
+            f.write("Error log initialized.\n")
+        st.info("Error log is empty. No errors yet!")
+        return
     try:
         with open(ERROR_LOG_PATH, "r") as f:
             log_lines = f.readlines()
@@ -230,7 +236,7 @@ if page == "Main":
                     st.write("Failed Devices:")
                     for dev in failed_devices:
                         st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
-                    
+
                     with st.expander("Show Error Log", expanded=True):
                         display_error_log()
                 else:

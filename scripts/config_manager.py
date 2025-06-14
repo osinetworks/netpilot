@@ -70,6 +70,7 @@ def run_config_task(device, commands, device_type):
     except Exception as e:
         result["output"] = str(e)
         logger.error(f"Config push FAILED: {result['device']} ({ip}): {e}")
+
     return result
 
 

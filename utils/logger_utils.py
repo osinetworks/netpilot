@@ -5,32 +5,38 @@ from scripts.constants import (
     DEBUG_LOG_PATH,
     INFO_LOG_PATH,
     ERROR_LOG_PATH,
+    LOG_FOLDER,
 )
 
+
+# -----------------------------------------------------------------------------
 def logger_handler(handler_name):
     """
     Logger setup for the backup manager.
     Creates a logger with handlers for console, debug, info, and error logs.
     """
 
-    # -----------------------------------------------------------------------------
-    # --- Create logs directory if it doesn't exist ---
-    os.makedirs("logs", exist_ok=True)
-    print(f"handler_name = {handler_name}")
+    # Ensure the log directory and files exist
+    os.makedirs(LOG_FOLDER, exist_ok=True)
 
-    # --- Logger Setup ---
+    if not os.path.exists(ERROR_LOG_PATH):
+        with open(ERROR_LOG_PATH, 'w') as f:
+            f.write("Error log initialized.\n")
+    if not os.path.exists(INFO_LOG_PATH):
+        with open(INFO_LOG_PATH, 'w') as f:
+            f.write("Info log initialized.\n")
+    if not os.path.exists(DEBUG_LOG_PATH):
+        with open(DEBUG_LOG_PATH, 'w') as f:
+            f.write("Debug log initialized.\n")
+
+    # Logger initialization
     logger = logging.getLogger(handler_name)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)  # Adjust according to the use case
 
-    if logger.hasHandlers():
-        logger.handlers.clear()
+    # Clear existing handlers to avoid duplicates
+    logger.handlers.clear()
 
-    # console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-
-    # debug, info, and error handlers
+    # File handlers for different log levels
     debug_handler = logging.FileHandler(DEBUG_LOG_PATH)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
@@ -43,12 +49,17 @@ def logger_handler(handler_name):
     error_handler.setLevel(logging.WARNING)
     error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
 
-    logger.addHandler(console_handler)
+    # Console handler for real-time messages
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)  # Shows DEBUG+ logs on console
+    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+
+    # Add handlers to logger
     logger.addHandler(debug_handler)
     logger.addHandler(info_handler)
     logger.addHandler(error_handler)
-
-    # --- End Logger Setup ---
+    logger.addHandler(console_handler)
+    
     return logger
 
 
@@ -66,13 +77,13 @@ def log_error(output):
 
     # Ensure the log directory exists
     import os
-    if not os.path.exists("log"):
-        os.makedirs("log")
+    if not os.path.exists(LOG_FOLDER):
+        os.makedirs(LOG_FOLDER)
     # Write the error message to the log file with a timestamp
 
     from datetime import datetime
     error_line = '{} {}\n'.format(str(datetime.now()), error_output)
-    with open("log/error.log", "a") as file:
+    with open(ERROR_LOG_PATH, "a") as file:
         file.write(error_line)
     print(error_line, end='')  # Print to console as well
 
@@ -91,13 +102,13 @@ def log_info(output):
 
     # Ensure the log directory exists
     import os
-    if not os.path.exists("log"):
-        os.makedirs("log")
+    if not os.path.exists(LOG_FOLDER):
+        os.makedirs(LOG_FOLDER)
     # Write the message to the log file with a timestamp
 
     from datetime import datetime
     info_line = '{} {}\n'.format(str(datetime.now()), output)
-    with open("log/info.log", "a") as file:
+    with open(INFO_LOG_PATH, "a") as file:
         file.write(info_line)
     print(info_line, end='')  # Print to console as well
 
@@ -116,13 +127,13 @@ def log_debug(output):
 
     # Ensure the log directory exists
     import os
-    if not os.path.exists("log"):
-        os.makedirs("log")
+    if not os.path.exists(LOG_FOLDER):
+        os.makedirs(LOG_FOLDER)
     # Write the debug message to the log file with a timestamp
 
     from datetime import datetime
     debug_line = '{} {}\n'.format(str(datetime.now()), output)
-    with open("log/debug.log", "a") as file:
+    with open(DEBUG_LOG_PATH, "a") as file:
         file.write(debug_line)
     print(debug_line, end='')  # Print to console as well
 
