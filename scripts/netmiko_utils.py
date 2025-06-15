@@ -122,6 +122,7 @@ def get_device_inventory(device, device_type):
         for cmd in commands:
             output = net_connect.send_command(cmd, expect_string=r"#")
             all_output += f"\n\n> {cmd}\n{output}"
+    print(f"All inputs:\n{all_output.strip()}")
     return all_output.strip()
 
 

@@ -4,15 +4,13 @@
 
 import os
 import yaml
-import logging
 from filelock import FileLock
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from scripts.constants import (
     DEVICES_FILE_PATH,
     CONFIG_FILE_PATH,
     GROUP_TO_DEVICE_TYPE,
-    OUTPUT_FOLDER,
     INVENTORY_FOLDER_PATH,
     INVENTORY_RESULT_FILE_PATH,
 )
@@ -23,8 +21,7 @@ from utils.network_utils import validate_ip, validate_devices, is_reachable
 from utils.logger_utils import logger_handler
 
 # --- Logger Setup ---
-logger = logging.getLogger("inventory_manager")
-
+logger = logger_handler("inventory_manager")
 
 def inventory_task(device, device_type):
     """
@@ -45,7 +42,13 @@ def inventory_task(device, device_type):
         msg = f"Invalid IP address for device {result['device']}: {ip}"
         logger.error(msg)
         return result
-
+    
+    if not is_reachable(ip):
+        result["output"] = f"Device not reachable: {ip}"
+        msg = f"Device not reachable for device {result['device']}: {ip}"
+        logger.error(msg)
+        return result
+    
     try:
         inventory = get_device_inventory(device, device_type)
         result["status"] = "SUCCESS"
