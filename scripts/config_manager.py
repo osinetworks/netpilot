@@ -124,6 +124,6 @@ def main():
     if os.path.exists(lock_file):
         os.remove(lock_file)
 
-
+# Ensure the script can be run as a standalone module
 if __name__ == "__main__":
     main()

@@ -2,6 +2,7 @@
 
 import streamlit as st
 import datetime
+import time
 import csv
 import yaml
 import io
@@ -185,7 +186,7 @@ if page == "Main":
         try:
             logger = setup_logger("config_manager")
             logger.info("Config task started")
-            config_manager.main()
+            progress = config_manager.main()
             logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(CONFIG_RESULT_FILE_PATH):
