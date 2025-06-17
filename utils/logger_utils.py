@@ -10,7 +10,7 @@ from scripts.constants import (
     LOG_FOLDER,
 )
 
-def logger_handler(handler_name):
+def setup_logger(handler_name):
     """
     Create and return a logger with handlers for console, debug, info, and error logs.
     Prevents adding handlers multiple times.

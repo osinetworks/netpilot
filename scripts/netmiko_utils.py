@@ -9,7 +9,8 @@ from scripts.constants import (
     INVENTORY_COMMANDS_PATHS,
     BACKUP_COMMANDS_PATHS,
     CREDENTIALS_FILE_PATH,
-    FIRMWARE_CONFIG_PATH
+    FIRMWARE_CONFIG_PATH,
+    SUPPORTED_DEVICE_TYPES,
 )
 from scripts.config_parser import load_yaml
 from utils.credentials_utils import load_credentials
@@ -190,7 +191,7 @@ def detect_device_vendor(device):
     """
     try:
         username, password, enable_secret = load_credentials(CREDENTIALS_FILE_PATH, device.get("name", device["host"]))
-        for device_type in ["arista_eos", "cisco_ios", "juniper_junos"]:
+        for device_type in SUPPORTED_DEVICE_TYPES:
             connection_params = {
                 "device_type": device_type,
                 "host": device["host"],

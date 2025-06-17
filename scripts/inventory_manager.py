@@ -16,9 +16,9 @@ from scripts.constants import (
 from scripts.netmiko_utils import get_device_inventory
 from scripts.config_parser import load_yaml
 from utils.network_utils import validate_ip, is_reachable
-from utils.logger_utils import logger_handler
+from utils.logger_utils import setup_logger
 
-logger = logger_handler("inventory_manager")
+logger = setup_logger("inventory_manager")
 #logger.info("Inventory task started -- 2")
 
 def inventory_task(device, device_type):

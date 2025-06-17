@@ -1,8 +1,8 @@
 import argparse
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
-from utils.logger_utils import logger_handler
+from utils.logger_utils import setup_logger
 
-logger = logger_handler("netpilot")
+logger = setup_logger("netpilot")
 
 def main():
     """

@@ -19,10 +19,10 @@ from scripts.netmiko_utils import backup_device_config
 from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
 from utils.network_utils import validate_devices, validate_ip, is_reachable
-from utils.logger_utils import logger_handler
+from utils.logger_utils import setup_logger
 
 # --- Logger Setup ---
-logger = logger_handler("backup_manager")
+logger = setup_logger("backup_manager")
 
 
 def backup_task(device, device_type):

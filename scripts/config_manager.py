@@ -18,10 +18,10 @@ from scripts.netmiko_utils import push_config_to_device
 from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
 from utils.network_utils import validate_devices, validate_ip, is_reachable
-from utils.logger_utils import logger_handler
+from utils.logger_utils import setup_logger
 
 # --- Logger Setup ---
-logger = logger_handler("config_manager")
+logger = setup_logger("config_manager")
 
 
 def get_config_commands(device_type):

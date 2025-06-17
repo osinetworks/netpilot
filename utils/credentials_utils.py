@@ -5,6 +5,7 @@ import yaml
 def load_credentials(credentials_file, device_name):
     with open(credentials_file, "r") as f:
         creds = yaml.safe_load(f)
+    
     # First check if the device has specific overrides
     if "overrides" in creds and device_name in creds["overrides"]:
         c = creds["overrides"][device_name]

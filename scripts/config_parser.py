@@ -3,9 +3,9 @@
 import yaml
 import streamlit as st
 from utils.exceptions import ConfigFileError
-from utils.logger_utils import logger_handler
+from utils.logger_utils import setup_logger
 
-logger = logger_handler("config_parser")
+logger = setup_logger("config_parser")
 logger.info("Config parser initialized")
 
 def load_yaml(file_path):
