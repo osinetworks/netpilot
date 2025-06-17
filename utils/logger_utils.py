@@ -1,6 +1,8 @@
+# logger_utils.py
 
 import logging
 import os
+from datetime import datetime
 from scripts.constants import (
     DEBUG_LOG_PATH,
     INFO_LOG_PATH,
@@ -8,139 +10,97 @@ from scripts.constants import (
     LOG_FOLDER,
 )
 
-
-# -----------------------------------------------------------------------------
 def logger_handler(handler_name):
     """
-    Logger setup for the backup manager.
-    Creates a logger with handlers for console, debug, info, and error logs.
+    Create and return a logger with handlers for console, debug, info, and error logs.
+    Prevents adding handlers multiple times.
     """
-
-    # Ensure the log directory and files exist
-    os.makedirs(LOG_FOLDER, exist_ok=True)
-
-    if not os.path.exists(ERROR_LOG_PATH):
-        with open(ERROR_LOG_PATH, 'w') as f:
-            f.write("Error log initialized.\n")
-    if not os.path.exists(INFO_LOG_PATH):
-        with open(INFO_LOG_PATH, 'w') as f:
-            f.write("Info log initialized.\n")
-    if not os.path.exists(DEBUG_LOG_PATH):
-        with open(DEBUG_LOG_PATH, 'w') as f:
-            f.write("Debug log initialized.\n")
-
-    # Logger initialization
+    #print(f"Initializing logger1: {handler_name}")
     logger = logging.getLogger(handler_name)
-    logger.setLevel(logging.DEBUG)  # Adjust according to the use case
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    logger.setLevel(logging.DEBUG)  # Capture all levels
 
-    # Clear existing handlers to avoid duplicates
-    logger.handlers.clear()
+    # Ensure log folder and files exist
+    os.makedirs(LOG_FOLDER, exist_ok=True)
+    for log_path, init_msg in [
+        (ERROR_LOG_PATH, "Error log initialized.\n"),
+        (INFO_LOG_PATH, "Info log initialized.\n"),
+        (DEBUG_LOG_PATH, "Debug log initialized.\n"),
+    ]:
+        if not os.path.exists(log_path):
+            with open(log_path, 'w') as f:
+                f.write(init_msg)
 
-    # File handlers for different log levels
+    # File handlers
     debug_handler = logging.FileHandler(DEBUG_LOG_PATH)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+    logger.addHandler(debug_handler)
 
     info_handler = logging.FileHandler(INFO_LOG_PATH)
     info_handler.setLevel(logging.INFO)
     info_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+    logger.addHandler(info_handler)
+
+    warning_handler = logging.FileHandler(ERROR_LOG_PATH)
+    warning_handler.setLevel(logging.WARNING)
+    warning_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
+    logger.addHandler(warning_handler)
 
     error_handler = logging.FileHandler(ERROR_LOG_PATH)
-    error_handler.setLevel(logging.WARNING)
+    error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-
-    # Console handler for real-time messages
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)  # Shows DEBUG+ logs on console
-    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
-
-    # Add handlers to logger
-    logger.addHandler(debug_handler)
-    logger.addHandler(info_handler)
     logger.addHandler(error_handler)
+
+    # Console handler for real-time output
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s'))
     logger.addHandler(console_handler)
-    
+
     return logger
 
-
-# -----------------------------------------------------------------------------
 def log_error(output):
     """
-    Function to add logs to a file with a timestamp.
-    Args:
-        error_output (str): The error message to log.
+    Write an error message to the error log file and print it to the console.
     """
-
-    error_output = str(output).strip()
-    if not error_output:
-        return  # If the output is empty, do not log anything
-
-    # Ensure the log directory exists
-    import os
-    if not os.path.exists(LOG_FOLDER):
-        os.makedirs(LOG_FOLDER)
-    # Write the error message to the log file with a timestamp
-
-    from datetime import datetime
-    error_line = '{} {}\n'.format(str(datetime.now()), error_output)
-    with open(ERROR_LOG_PATH, "a") as file:
-        file.write(error_line)
-    print(error_line, end='')  # Print to console as well
-
-
-# -----------------------------------------------------------------------------
-def log_info(output):
-    """
-    Function to add logs to a file with a timestamp.
-    Args:
-        output (str): The message to log.
-    """ 
-    
     output = str(output).strip()
     if not output:
-        return  # If the output is empty, do not log anything
+        return
+    os.makedirs(LOG_FOLDER, exist_ok=True)
+    error_line = '{} {}\n'.format(str(datetime.now()), output)
+    with open(ERROR_LOG_PATH, "a") as file:
+        file.write(error_line)
+    print(error_line, end='')
 
-    # Ensure the log directory exists
-    import os
-    if not os.path.exists(LOG_FOLDER):
-        os.makedirs(LOG_FOLDER)
-    # Write the message to the log file with a timestamp
-
-    from datetime import datetime
+def log_info(output):
+    """
+    Write an info message to the info log file and print it to the console.
+    """
+    output = str(output).strip()
+    if not output:
+        return
+    os.makedirs(LOG_FOLDER, exist_ok=True)
     info_line = '{} {}\n'.format(str(datetime.now()), output)
     with open(INFO_LOG_PATH, "a") as file:
         file.write(info_line)
-    print(info_line, end='')  # Print to console as well
+    print(info_line, end='')
 
-
-# -----------------------------------------------------------------------------
 def log_debug(output):
     """
-    Function to add debug logs to a file with a timestamp.
-    Args:
-        output (str): The debug message to log.
+    Write a debug message to the debug log file and print it to the console.
     """
-
     output = str(output).strip()
     if not output:
-        return  # If the output is empty, do not log anything
-
-    # Ensure the log directory exists
-    import os
-    if not os.path.exists(LOG_FOLDER):
-        os.makedirs(LOG_FOLDER)
-    # Write the debug message to the log file with a timestamp
-
-    from datetime import datetime
+        return
+    os.makedirs(LOG_FOLDER, exist_ok=True)
     debug_line = '{} {}\n'.format(str(datetime.now()), output)
     with open(DEBUG_LOG_PATH, "a") as file:
         file.write(debug_line)
-    print(debug_line, end='')  # Print to console as well
-
-
+    print(debug_line, end='')
 
 if __name__ == "__main__":
-    
     # Example usage of the logging functions
     log_info("This is an informational message.")
     log_error("This is an error message.")

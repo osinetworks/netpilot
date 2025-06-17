@@ -4,7 +4,6 @@
 
 import os
 import yaml
-from filelock import FileLock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scripts.constants import (
@@ -15,97 +14,76 @@ from scripts.constants import (
     INVENTORY_RESULT_FILE_PATH,
 )
 from scripts.netmiko_utils import get_device_inventory
-from scripts.worker import device_worker
 from scripts.config_parser import load_yaml
-from utils.network_utils import validate_ip, validate_devices, is_reachable
+from utils.network_utils import validate_ip, is_reachable
 from utils.logger_utils import logger_handler
 
-# --- Logger Setup ---
 logger = logger_handler("inventory_manager")
+#logger.info("Inventory task started -- 2")
 
 def inventory_task(device, device_type):
-    """
-    Task to collect inventory information from a device.
-    """
+    """Collect inventory from a single device, log result and return status."""
+    ip = device.get("host")
+    device_name = device.get("name", "UNKNOWN")
+    logger.info(f"Starting inventory collection for {device_name}")
 
-    logger.info(f"Starting inventory collection for {device.get('name')}")
     result = {
-        "device": device.get("name", "UNKNOWN"),
-        "host": device.get("host", "UNKNOWN"),
+        "device": device_name,
+        "host": ip,
         "status": "FAILED",
         "output": ""
     }
 
-    ip = device.get("host")
     if not validate_ip(ip):
-        result["output"] = f"Invalid IP address: {ip}"
-        msg = f"Invalid IP address for device {result['device']}: {ip}"
+        msg = f"Invalid IP address for device {device_name}: {ip}"
         logger.error(msg)
+        result["output"] = msg
         return result
-    
+
     if not is_reachable(ip):
-        result["output"] = f"Device not reachable: {ip}"
-        msg = f"Device not reachable for device {result['device']}: {ip}"
+        msg = f"Device not reachable for device {device_name}: {ip}"
         logger.error(msg)
+        result["output"] = msg
         return result
-    
+
     try:
         inventory = get_device_inventory(device, device_type)
         result["status"] = "SUCCESS"
         result["output"] = inventory
-        logger.info(f"Inventory SUCCESS: {result['device']} ({ip})")
+        logger.info(f"Inventory SUCCESS: {device_name} ({ip})")
     except Exception as e:
         result["output"] = str(e)
-        msg = f"Inventory FAILED: {result['device']} ({ip}): {e}"
-        logger.error(msg)
+        logger.error(f"Inventory FAILED: {device_name} ({ip}): {e}")
 
     return result
 
-
 def main():
-    ''' Thread numbers and device groups are loaded from YAML config files '''
-
+    """Main entry for inventory collection using multithreading."""
     config = load_yaml(CONFIG_FILE_PATH)
     thread_params = config.get("thread_pools", {})
     num_threads = thread_params.get("num_threads", 5)
 
     devices_yaml = load_yaml(DEVICES_FILE_PATH)
     devices = devices_yaml.get("devices", [])
-    
-    devices = validate_devices(devices, logger)
     if not devices:
         logger.error("No devices found for inventory collection.")
         return
 
+    #logger.info("Inventory task started -- 3")
     os.makedirs(INVENTORY_FOLDER_PATH, exist_ok=True)
-
     results = []
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = []
-        for device in devices:
-            group = device.get("group")
-            device_type = GROUP_TO_DEVICE_TYPE.get(group)
-            if not device_type:
-                logger.error(f"Unknown group '{group}' for device {device['name']}")
-                continue
-            futures.append(executor.submit(inventory_task, device, device_type))
-            
+        futures = [
+            executor.submit(inventory_task, device, GROUP_TO_DEVICE_TYPE.get(device.get("group")))
+            for device in devices if GROUP_TO_DEVICE_TYPE.get(device.get("group"))
+        ]
         for future in as_completed(futures):
             results.append(future.result())
+        #logger.info("Inventory task started -- 4")
 
-    # Write results as YAML
-    output_file = INVENTORY_RESULT_FILE_PATH
-    lock_file = f"{output_file}.lock"
-    lock = FileLock(lock_file)
-    with lock:
-        with open(output_file, "w") as f:
-            yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
-        logger.info(f"Inventory results written to {output_file}")
+    with open(INVENTORY_RESULT_FILE_PATH, "w") as f:
+        yaml.dump(results, f, default_flow_style=False, allow_unicode=True)
+    logger.info(f"Inventory results written to {INVENTORY_RESULT_FILE_PATH}")
 
-    if os.path.exists(lock_file):
-        os.remove(lock_file)
-
-
-# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     main()

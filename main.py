@@ -1,23 +1,17 @@
 import argparse
-import logging
-from scripts import config_manager
-from scripts import backup_manager
-from scripts import inventory_manager
+from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
+from utils.logger_utils import logger_handler
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s]: %(message)s",
-)
-
+logger = logger_handler("netpilot")
 
 def main():
     """
     Main entry point for the network automation script.
-    This script handles different automation tasks such as configuration deployment,
-    backup, inventory management, and firmware updates.
     """
-    logging.info("Starting Network Automation Suite - NetPilot")
-    parser = argparse.ArgumentParser(description="Network Automation Main Entry Point")
+    logger.info("Starting Network Automation Suite - NetPilot")
+    parser = argparse.ArgumentParser(
+        description="Network Automation Main Entry Point"
+    )
     parser.add_argument(
         "--task",
         required=True,
@@ -32,20 +26,24 @@ def main():
 
     args = parser.parse_args()
 
-    if args.task == "config":
-        logging.info("Starting config deployment task.")
-        config_manager.main()
-        logging.info("Config deployment task finished.")
-    elif args.task == "backup":
-        logging.info("Starting backup task.")
-        backup_manager.main()
-        logging.info("Backup task finished.")
-    elif args.task == "inventory":
-        logging.info("Starting inventory task.")
-        inventory_manager.main()
-        logging.info("Inventory task finished.")
-    else:
-        logging.error(f"Unsupported task: {args.task}")
+    task_map = {
+        "config": config_manager,
+        "backup": backup_manager,
+        "inventory": inventory_manager,
+        "firmware": firmware_manager,
+    }
+
+    task_module = task_map.get(args.task)
+    if not task_module:
+        logger.error(f"Unsupported task: {args.task}")
+        return
+
+    logger.info(f"Starting {args.task} task.")
+    try:
+        task_module.main()
+        logger.info(f"{args.task.capitalize()} task finished.")
+    except Exception as exc:
+        logger.exception(f"{args.task.capitalize()} task failed: {exc}")
 
 if __name__ == "__main__":
     main()

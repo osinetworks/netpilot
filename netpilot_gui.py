@@ -25,6 +25,7 @@ from scripts.constants import (
     INVENTORY_RESULT_FILE_PATH,
     FIRMWARE_RESULT_FILE_PATH,
 )
+from utils.logger_utils import logger_handler
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
@@ -182,7 +183,10 @@ if page == "Main":
         st.info("Starting config deployment...")
         log("Starting config deployment...", "info")
         try:
+            logger = logger_handler("config_manager")
+            logger.info("Config task started")
             config_manager.main()
+            logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(CONFIG_RESULT_FILE_PATH):
                 with open(CONFIG_RESULT_FILE_PATH, 'r') as f:
@@ -218,7 +222,10 @@ if page == "Main":
         st.info("Starting backup...")
         log("Starting backup...", "info")
         try:
+            logger = logger_handler("backup_manager")
+            logger.info("Backup task started")
             backup_manager.main()
+            logger.info("Backup task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(BACKUP_RESULT_FILE_PATH):
                 with open(BACKUP_RESULT_FILE_PATH, 'r') as f:
@@ -254,7 +261,10 @@ if page == "Main":
         st.session_state["log_lines"] = []
         log("Starting inventory collection...", "info")
         try:
+            logger = logger_handler("inventory_manager")
+            logger.info("Inventory task started")
             inventory_manager.main()
+            logger.info("Inventory task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(INVENTORY_RESULT_FILE_PATH):
                 with open(INVENTORY_RESULT_FILE_PATH, 'r') as f:
@@ -290,7 +300,10 @@ if page == "Main":
         st.session_state["log_lines"] = []
         log("Starting firmware upgrade...", "info")
         try:
+            logger = logger_handler("firmware_manager")
+            logger.info("Firmware task started")
             firmware_manager.main()
+            logger.info("Firmware task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(FIRMWARE_RESULT_FILE_PATH):
                 with open(FIRMWARE_RESULT_FILE_PATH, 'r') as f:
