@@ -4,22 +4,22 @@ import os
 ENVIRONMENT = os.getenv("NETAUTO_ENV", "production")
 
 # Config file path
-CONFIG_FILE_PATH = "config/config.yaml"
+CONFIG_FILE_PATH = os.path.join("config", "config.yaml")
 
 # Devices YAML file path
-DEVICES_FILE_PATH = "config/devices.yaml"
+DEVICES_FILE_PATH = os.path.join("config", "devices.yaml")
 
 # Credentials file path
-CREDENTIALS_FILE_PATH = "config/credentials.yaml"
+CREDENTIALS_FILE_PATH = os.path.join("config", "credentials.yaml")
 
 # Devices YAML file path
-DEVICES_FILE_PATH = "config/devices.yaml"
+DEVICES_FILE_PATH = os.path.join("config", "devices.yaml")
 
 # Firmware config file path
-FIRMWARE_CONFIG_PATH = "config/firmware.yaml"
+FIRMWARE_CONFIG_PATH = os.path.join("config", "firmware.yaml")
 
 # config commands folder path
-COMMANDS_FOLDER_PATH = "config/commands/"
+COMMANDS_FOLDER_PATH = os.path.join("config", "commands")
 
 # Command file paths
 CONFIG_COMMANDS_FILE = {
