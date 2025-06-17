@@ -55,7 +55,7 @@ def display_output(msg, results):
                 display_error_log()
     else:
         st.success(msg)
-        log("msg", "success")
+        log(msg, "success")
 
 
 # --- Display Error Log PAGE ---
