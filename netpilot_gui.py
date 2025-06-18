@@ -7,6 +7,7 @@ import csv
 import yaml
 import io
 import os
+import pandas as pd
 
 from scripts import config_manager, backup_manager, inventory_manager, firmware_manager
 from scripts.constants import (
@@ -140,8 +141,9 @@ def show_error_log():
     else:
         st.warning("Error log file not found.")
 
-def task_progress(devices):
-    st.write("Configuration task is starting...")
+def show_task_progress(devices):
+    st.info("Task started...")
+
     progress_bar = st.progress(0)
     status_placeholder = st.empty()
 
@@ -150,6 +152,41 @@ def task_progress(devices):
         time.sleep(1)
         progress_bar.progress((i + 1) / len(devices))
 
+
+def show_task_results_table(task_result_path, task_type="config"):
+    """
+    Show results in a colored, filterable table.
+    :param task_result_path: Path to the YAML result file.
+    :param task_type: For labeling.
+    """
+    try:
+        with open(task_result_path, "r") as f:
+            results = yaml.safe_load(f)
+    except Exception as e:
+        st.warning(f"Could not read {task_type} results: {e}")
+        return
+
+    if not results:
+        st.info(f"No results found for {task_type} task.")
+        return
+
+    #  Prepare data for display
+    table_data = []
+    for item in results:
+        color = "🟢" if item.get("status") == "SUCCESS" else "🔴"
+        table_data.append({
+            "Device": item.get("device"),
+            "IP": item.get("host"),
+            "Status": color + " " + item.get("status", ""),
+            "Message": item.get("output", "")[:100],  # first 100 chars
+        })
+    st.write(f"### {task_type.capitalize()} Task Results")
+    st.dataframe(table_data, use_container_width=True)
+
+    # Filter for failed devices only
+    failed = [i for i in results if i.get("status") != "SUCCESS"]
+    if failed:
+        st.error(f"{len(failed)} device(s) failed. Check error log for details.")
 
 # --- Main PAGE ---
 if page == "Main":
@@ -195,41 +232,17 @@ if page == "Main":
 
     if selected_button == CONFIG_BUTTON:
         st.session_state["log_lines"] = []
-        st.info("Starting config deployment...")
-        log("Starting config deployment...", "info")
+        show_task_progress(devices_list)
         try:
             logger = setup_logger("config_manager")
             logger.info("Config task started")
 
-            task_progress(devices_list)
+            show_task_results_table(CONFIG_RESULT_FILE_PATH, task_type="config")
             config_manager.main()
 
             logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
-            if os.path.exists(CONFIG_RESULT_FILE_PATH):
-                with open(CONFIG_RESULT_FILE_PATH, 'r') as f:
-                    results = yaml.safe_load(f) or []
 
-                failed_devices = [r for r in results if r.get("status") == "FAILED"]
-                successful_devices = [r for r in results if r.get("status") == "SUCCESS"]
-                if failed_devices:
-                    st.error(f"Some devices failed! Please check the error log below.")
-                    log("Some devices failed! Please check the error log in the 'Show Error Log' section button/tab for details.", "error")
-                    st.write("Successful Devices:")
-                    for dev in successful_devices:
-                        st.write(f"✅ {dev.get('device')} ({dev.get('host')})")
-
-                    st.write("Failed Devices:")
-                    for dev in failed_devices:
-                        st.write(f"❌ {dev.get('device')} ({dev.get('host')}): {dev.get('output')}")
-                    
-                    with st.expander("Show Error Log", expanded=True):
-                        display_error_log()
-                else:
-                    st.success("Configuration deployed successfully to all devices!")
-                    log("Configuration deployed successfully to all devices!", "success")
-            else:
-                st.success("Configuration deployed, but no result file found.")
         except Exception as e:
             st.error(f"Config Error: {e}")
             with st.expander("Show Error Log", expanded=True):
@@ -237,13 +250,12 @@ if page == "Main":
 
     elif selected_button == BACKUP_BUTTON:
         st.session_state["log_lines"] = []
-        st.info("Starting backup...")
-        log("Starting backup...", "info")
+        show_task_progress(devices_list)
         try:
             logger = setup_logger("backup_manager")
             logger.info("Backup task started")
 
-            task_progress(devices_list)
+            show_task_results_table(BACKUP_RESULT_FILE_PATH, task_type="backup")
             backup_manager.main()
 
             logger.info("Backup task completed")
@@ -280,13 +292,12 @@ if page == "Main":
     # --- INVENTORY COLLECTION TASK ---
     elif selected_button == INVENTORY_BUTTON:
         st.session_state["log_lines"] = []
-        st.info("Starting inventory collection...")
-        log("Starting inventory collection...", "info")
+        show_task_progress(devices_list)
         try:
             logger = setup_logger("inventory_manager")
             logger.info("Inventory task started")
 
-            task_progress(devices_list)
+            show_task_results_table(INVENTORY_RESULT_FILE_PATH, task_type="inventory")
             inventory_manager.main()
             
             logger.info("Inventory task completed")
@@ -323,13 +334,12 @@ if page == "Main":
     # --- FIRMWARE UPGRADE TASK ---
     elif selected_button == FIRMWARE_BUTTON:
         st.session_state["log_lines"] = []
-        log("Starting firmware upgrade...", "info")
-        st.info("Starting firmware upgrade...")
+        show_task_progress(devices_list)
         try:
             logger = setup_logger("firmware_manager")
             logger.info("Firmware task started")
-            
-            task_progress(devices_list)
+
+            show_task_results_table(FIRMWARE_RESULT_FILE_PATH, task_type="firmware")
             firmware_manager.main()
 
             logger.info("Firmware task completed")
