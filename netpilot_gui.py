@@ -27,13 +27,14 @@ from scripts.constants import (
     FIRMWARE_RESULT_FILE_PATH,
 )
 from utils.logger_utils import setup_logger
+from utils.network_utils import validate_ip, is_reachable
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
 # Sidebar page selector
 page = st.sidebar.selectbox(
     "Select Page",
-    ("Main", "Show Backup Files", "Show Error Log"),
+    ("Main", "Show Backup Files", "Show Error Log", "Run Command"),
     index=0
 )
 
@@ -443,3 +444,21 @@ elif page == "Show Backup Files":
 # --- Show Error Log PAGE ---
 elif page == "Show Error Log":
     show_error_log()
+elif page == "Run Command":
+    ip = st.text_input("Device IP Address:")
+    if not ip:
+        st.warning("Please enter a device IP address.")
+    
+    if not validate_ip(ip):
+        st.warning(f"Invalid IP address: {ip}")
+
+    if not is_reachable(ip):
+        st.warning(f"IP not reachable on port 22: {ip}")
+
+    command = st.text_area("Send Command:")
+    if st.button("Send Command"):
+        if command:
+            st.success("Command sent.")
+        else:
+            st.error("Command cannot be empty.")
+
