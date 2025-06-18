@@ -28,6 +28,7 @@ from scripts.constants import (
 )
 from utils.logger_utils import setup_logger
 from utils.network_utils import validate_ip, is_reachable
+from scripts.config_parser import load_yaml
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 
@@ -139,6 +140,16 @@ def show_error_log():
     else:
         st.warning("Error log file not found.")
 
+def task_progress(devices):
+    st.write("Configuration task is starting...")
+    progress_bar = st.progress(0)
+    status_placeholder = st.empty()
+
+    for i, device in enumerate(devices):
+        status_placeholder.write(f"Progress: {device.get('name')}")
+        time.sleep(1)
+        progress_bar.progress((i + 1) / len(devices))
+
 
 # --- Main PAGE ---
 if page == "Main":
@@ -147,7 +158,9 @@ if page == "Main":
     
     log_panel = st.empty()
     selected_button = None
-
+    devices_yaml = load_yaml(DEVICES_FILE_PATH)
+    devices_list = devices_yaml.get("devices", [])
+    
     def log(message, level="info"):
         """Log message to the UI panel."""
         colors = {"info": "🟦", "success": "🟩", "error": "🟥", "warn": "🟨"}
@@ -187,7 +200,10 @@ if page == "Main":
         try:
             logger = setup_logger("config_manager")
             logger.info("Config task started")
-            progress = config_manager.main()
+
+            task_progress(devices_list)
+            config_manager.main()
+
             logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(CONFIG_RESULT_FILE_PATH):
@@ -226,7 +242,10 @@ if page == "Main":
         try:
             logger = setup_logger("backup_manager")
             logger.info("Backup task started")
+
+            task_progress(devices_list)
             backup_manager.main()
+
             logger.info("Backup task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(BACKUP_RESULT_FILE_PATH):
@@ -261,11 +280,15 @@ if page == "Main":
     # --- INVENTORY COLLECTION TASK ---
     elif selected_button == INVENTORY_BUTTON:
         st.session_state["log_lines"] = []
+        st.info("Starting inventory collection...")
         log("Starting inventory collection...", "info")
         try:
             logger = setup_logger("inventory_manager")
             logger.info("Inventory task started")
+
+            task_progress(devices_list)
             inventory_manager.main()
+            
             logger.info("Inventory task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(INVENTORY_RESULT_FILE_PATH):
@@ -301,10 +324,14 @@ if page == "Main":
     elif selected_button == FIRMWARE_BUTTON:
         st.session_state["log_lines"] = []
         log("Starting firmware upgrade...", "info")
+        st.info("Starting firmware upgrade...")
         try:
             logger = setup_logger("firmware_manager")
             logger.info("Firmware task started")
+            
+            task_progress(devices_list)
             firmware_manager.main()
+
             logger.info("Firmware task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(FIRMWARE_RESULT_FILE_PATH):
