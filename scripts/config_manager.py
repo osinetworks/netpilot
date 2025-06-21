@@ -53,12 +53,12 @@ def run_config_task(device, commands, device_type):
     ip = device.get("host")
     if not validate_ip(ip):
         result["output"] = f"Invalid IP address: {ip}"
-        logger.error(f"Invalid IP address for device {result['device']}: {ip}")
+        logger.error(f"Invalid IP address for device {result['device']}| {ip}")
         return result
 
     if not is_reachable(ip):
         result["output"] = f"IP not reachable on port 22: {ip}"
-        logger.error(f"Device unreachable (port 22) for {result['device']}: {ip}")
+        logger.error(f"Device unreachable (port 22) for {result['device']}| {ip}")
         return result
 
     try:

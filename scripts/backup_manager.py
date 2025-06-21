@@ -45,7 +45,7 @@ def backup_task(device, device_type):
     
     if not is_reachable(ip):
         result["output"] = f"Device not reachable: {ip}"
-        msg = f"Device not reachable for device {result['device']}: {ip}"
+        msg = f"Device not reachable for device {result['device']} | {ip}"
         logger.error(msg)
         return result
 

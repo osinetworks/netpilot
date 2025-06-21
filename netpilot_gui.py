@@ -149,6 +149,63 @@ def show_task_results_table(task_result_path, task_type="config"):
     if failed:
         st.error(f"{len(failed)} device(s) failed. Check error log for details.")
 
+def show_error_msg_table():
+    """Show error messages in a table: Time, Device, Error"""
+    st.write("### Error Messages")
+    try:
+        with open(ERROR_LOG_PATH, "r") as f:
+            error_log_content = f.read()
+        if not error_log_content.strip():
+            st.info("No errors found in the error log.")
+            return
+    except Exception as e:
+        st.warning(f"Could not read error log: {e}")
+        return
+
+    error_messages = []
+    for line in error_log_content.strip().splitlines():
+        # Log format: "2025-06-21 11:56:26,825 ERROR [backup_manager]: Device not reachable for device cisco-sw-001: 10.10.10.11"
+        try:
+            # Split time and rest
+            time_part, rest = line.split(" ERROR ", 1)
+            # Device adı ve hata mesajı
+            if "for device " in rest:
+                pre, post = rest.split("for device ", 1)
+                # post örneği: "cisco-sw-001: 10.10.10.11"
+                device_part, error_part = post.split(":", 1)
+                device = device_part.strip()
+                error = error_part.strip()
+            else:
+                # fallback - daha farklı log formatı için
+                device = "Unknown"
+                error = rest.strip()
+            error_messages.append({
+                "Time": time_part.strip(),
+                "Device": device,
+                "Error": error
+            })
+        except Exception:
+            # Satırı ayrıştıramazsa, atla (istersen logla)
+            continue
+
+    # Pandas DataFrame ile tablo yap
+    if not error_messages:
+        st.info("No valid error messages found.")
+        return
+
+    df = pd.DataFrame(error_messages)
+    # En yeni en üstte göstermek için
+    df = df.iloc[::-1]
+
+    # Streamlit'te daha geniş alan için container kullan
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=450,     # İstediğin gibi ayarla
+        hide_index=True
+    )
+
+
 # --- Main PAGE ---
 if page == "Main":
     st.title("Netpilot Automation Suite")
@@ -323,7 +380,8 @@ if page == "Main":
 
     with col2:
         if st.button(SHOW_ERRORS_BUTTON):
-            show_error_log()
+            show_error_msg_table()
+            #show_error_log()
 
     # --- CSV TO YAML & COMMAND FILE UPLOAD PANEL ---
     st.markdown("---")

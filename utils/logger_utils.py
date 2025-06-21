@@ -35,7 +35,7 @@ def setup_logger(handler_name):
     os.makedirs(LOG_FOLDER, exist_ok=True)
 
     # Common formatter for all handlers
-    formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(levelname)s | [%(name)s] | %(message)s')
 
     log_levels = [
         (DEBUG_LOG_PATH, logging.DEBUG),
