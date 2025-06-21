@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of the Network Automation Suite.
 
-VERSION = "1.8.3"
+VERSION = "1.9.2"
 
 def print_banner():
     print(f"Network Automation Suite v{VERSION}")
