@@ -474,7 +474,8 @@ elif page == "Show Backup Files":
     show_backup_files()
 # --- Show Error Log PAGE ---
 elif page == "Show Error Log":
-    show_error_log()
+    #show_error_log()
+    show_error_msg_table()
 elif page == "Run Command":
     ip = st.text_input("Device IP Address:")
     if not ip:

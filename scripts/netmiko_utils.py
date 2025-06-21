@@ -14,7 +14,7 @@ from scripts.constants import (
 )
 from scripts.config_parser import load_yaml
 from utils.credentials_utils import load_credentials
-
+from utils.logger_utils import setup_logger
 
 def load_commands_from_file(file_path):
     """Loads commands from a file, ignoring empty lines and comments."""
@@ -216,14 +216,12 @@ def detect_device_vendor(device):
         return "unknown"
 
 
-def firmware_upgrade_procedure(device, device_type, logger):
+def firmware_upgrade_procedure(device, device_type):
     """
     Dispatches firmware upgrade to the correct vendor procedure.
     Loads firmware config, normalizes type, logs errors if unsupported.
     """
-    from scripts.config_parser import load_yaml
-    from scripts.constants import FIRMWARE_CONFIG_PATH
-
+    logger = setup_logger("firmware_manager")
     # Load firmware config (firmware.yaml)
     firmware_config = load_yaml(FIRMWARE_CONFIG_PATH)
     if firmware_config is None:

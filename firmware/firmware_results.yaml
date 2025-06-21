@@ -1,20 +1,20 @@
 - device: arista-sw-002
   host: 172.20.20.102
-  output: 'firmware_upgrade_procedure() missing 1 required positional argument: ''logger'''
-  status: FAILED
-- device: arista-sw-001
-  host: 172.20.20.101
-  output: 'firmware_upgrade_procedure() missing 1 required positional argument: ''logger'''
+  output: '''firmware'''
   status: FAILED
 - device: cisco-sw-001
   host: 10.10.10.11
-  output: 'firmware_upgrade_procedure() missing 1 required positional argument: ''logger'''
-  status: FAILED
-- device: cisco-sw-002
-  host: 10.10.10.12
-  output: 'firmware_upgrade_procedure() missing 1 required positional argument: ''logger'''
+  output: null
+  status: SUCCESS
+- device: arista-sw-001
+  host: 172.20.20.101
+  output: '''firmware'''
   status: FAILED
 - device: cisco-sw-003
   host: 10.10.10.13
-  output: 'firmware_upgrade_procedure() missing 1 required positional argument: ''logger'''
-  status: FAILED
+  output: null
+  status: SUCCESS
+- device: cisco-sw-002
+  host: 10.10.10.12
+  output: null
+  status: SUCCESS
