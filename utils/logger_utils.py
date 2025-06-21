@@ -16,6 +16,33 @@ class LevelFilter(logging.Filter):
         self.level = level
     def filter(self, record):
         return record.levelno == self.level
+    
+
+def parse_log(log_entry):
+    """
+    Parse a simple log entry string into a structured dictionary.
+    "2025-06-21 18:00:37 | ERROR | [config_manager] | Device unreachable (port 22) for cisco-sw-003| 10.10.10.13"
+    """
+    # Split the log entry by '|'
+    parts = log_entry.split('|')
+    
+    if len(parts) == 5:
+        timestamp = parts[0].strip()                # timestamp
+        error_level = parts[1].strip()              # error level
+        function = parts[2].strip().strip('[]')     # function that produced the error
+        error_message = parts[3].strip()            # error message
+        ip_address = parts[4].strip()               # IP address
+
+        return {
+            'timestamp': timestamp,
+            'error_level': error_level,
+            'function': function,
+            'error_message': error_message,
+            'ip_address': ip_address
+        }
+    else:
+        return None
+
 
 def setup_logger(handler_name):
     """
@@ -34,8 +61,12 @@ def setup_logger(handler_name):
     # Ensure log folder and files exist
     os.makedirs(LOG_FOLDER, exist_ok=True)
 
+    # Sample format: 2025-06-21 18:10:32
+    date_format = "%Y-%m-%d %H:%M:%S"
+    log_format = "%(asctime)s | %(levelname)s | [%(name)s] | %(message)s"
+
     # Common formatter for all handlers
-    formatter = logging.Formatter('%(asctime)s | %(levelname)s | [%(name)s] | %(message)s')
+    formatter = logging.Formatter(log_format, datefmt=date_format)
 
     log_levels = [
         (DEBUG_LOG_PATH, logging.DEBUG),

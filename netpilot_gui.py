@@ -27,7 +27,7 @@ from scripts.constants import (
     INVENTORY_RESULT_FILE_PATH,
     FIRMWARE_RESULT_FILE_PATH,
 )
-from utils.logger_utils import setup_logger
+from utils.logger_utils import setup_logger, parse_log
 from utils.network_utils import validate_ip, is_reachable
 from scripts.config_parser import load_yaml
 
@@ -167,41 +167,37 @@ def show_error_msg_table():
         # Log format: "2025-06-21 11:56:26,825 ERROR [backup_manager]: Device not reachable for device cisco-sw-001: 10.10.10.11"
         try:
             # Split time and rest
-            time_part, rest = line.split(" ERROR ", 1)
-            # Device adı ve hata mesajı
-            if "for device " in rest:
-                pre, post = rest.split("for device ", 1)
-                # post örneği: "cisco-sw-001: 10.10.10.11"
-                device_part, error_part = post.split(":", 1)
-                device = device_part.strip()
-                error = error_part.strip()
-            else:
-                # fallback - daha farklı log formatı için
-                device = "Unknown"
-                error = rest.strip()
+            result = parse_log(line)
+            # Device and error part
+            timestamp = result.get("timestamp")
+            log_level = result.get("error_level", "ERROR")
+            function = result.get("function")
+            error_message = result.get("error_message")
+            ip_address = result.get("ip_address")
             error_messages.append({
-                "Time": time_part.strip(),
-                "Device": device,
-                "Error": error
+                "Time": timestamp.strip(),
+                "Function": function.strip(),
+                "Device": ip_address,
+                "Error": error_message
             })
         except Exception:
-            # Satırı ayrıştıramazsa, atla (istersen logla)
+            # if line is not in expected format, skip it
             continue
 
-    # Pandas DataFrame ile tablo yap
+    # Pandas DataFrame for better display
     if not error_messages:
         st.info("No valid error messages found.")
         return
 
     df = pd.DataFrame(error_messages)
-    # En yeni en üstte göstermek için
+    # for better readability, reverse the order
     df = df.iloc[::-1]
 
-    # Streamlit'te daha geniş alan için container kullan
+    # Streamlit dataframe with custom styling
     st.dataframe(
         df,
         use_container_width=True,
-        height=450,     # İstediğin gibi ayarla
+        height=450,     # Adjust as needed
         hide_index=True
     )
 
