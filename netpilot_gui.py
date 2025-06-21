@@ -272,7 +272,8 @@ if page == "Main":
         except Exception as e:
             st.error(f"Config Error: {e}")
             with st.expander("Show Error Log", expanded=True):
-                show_error_log()
+                #show_error_log()
+                show_error_msg_table()
 
     elif selected_button == BACKUP_BUTTON:
         st.session_state["log_lines"] = []
@@ -302,7 +303,8 @@ if page == "Main":
         except Exception as e:
             st.error(f"Backup Error: {e}")
             with st.expander("Show Error Log", expanded=True):
-                show_error_log()
+                #show_error_log()
+                show_error_msg_table()
 
     # --- INVENTORY COLLECTION TASK ---
     elif selected_button == INVENTORY_BUTTON:
@@ -333,8 +335,9 @@ if page == "Main":
         except Exception as e:
             st.error(f"Inventory Error: {e}")
             with st.expander("Show Error Log", expanded=True):
-                show_error_log()
-    
+                #show_error_log()
+                show_error_msg_table()
+
     # --- FIRMWARE UPGRADE TASK ---
     elif selected_button == FIRMWARE_BUTTON:
         st.session_state["log_lines"] = []
@@ -364,7 +367,8 @@ if page == "Main":
         except Exception as e:
             st.error(f"Firmware Upgrade Error: {e}")
             with st.expander("Show Error Log", expanded=True):
-                show_error_log()
+                #show_error_log()
+                show_error_msg_table()
 
     st.markdown("---")
     # --- LOG PANEL ---
