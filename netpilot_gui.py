@@ -26,9 +26,10 @@ from scripts.constants import (
     SHOW_ERRORS_BUTTON,
     INVENTORY_RESULT_FILE_PATH,
     FIRMWARE_RESULT_FILE_PATH,
+    STATUS_FILE_PATH,
 )
 from utils.logger_utils import setup_logger, parse_log
-from utils.network_utils import validate_ip, is_reachable
+from utils.network_utils import validate_ip, is_reachable, write_device_status_yaml
 from scripts.config_parser import load_yaml
 
 st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
@@ -36,7 +37,8 @@ st.set_page_config(page_title="Netpilot Automation Suite", layout="centered")
 # Sidebar page selector
 page = st.sidebar.selectbox(
     "Select Page",
-    ("Main", "Show Backup Files", "Show Error Log", "Run Command"),
+    #("Main", "Show Backup Files", "Show Error Log", "Run Command"),
+    ("Main", "Device List", "Tasks", "Logs", "File Manager", "Scheduler", "User Settings"),
     index=0
 )
 
@@ -201,6 +203,69 @@ def show_error_msg_table():
         hide_index=True
     )
 
+def show_device_status_content():
+    """Show device status information in a table."""
+    st.write("### Device Status")
+    try:
+        status_content = load_yaml(STATUS_FILE_PATH)
+        if not status_content.strip():
+            st.info("No device status information found.")
+            return
+    except Exception as e:
+        st.warning(f"Could not read status file: {e}")
+        return
+
+    device_status = []
+    error_messages = []
+    for line in status_content.strip().splitlines():
+        # Log format: "2025-06-21 11:56:26,825 ERROR [backup_manager]: Device not reachable for device cisco-sw-001: 10.10.10.11"
+        try:
+            # Split time and rest
+            result = parse_log(line)
+            # Device and error part
+            hostname = result.get("name")
+            ip_address = result.get("ip")
+            vendor = result.get("vendor")
+            status = result.get("status")
+            last_seen = result.get("last_seen")
+
+            device_status.append({
+                "name": hostname.strip(),
+                "hostname": hostname.strip(),
+                "Vendor": vendor.strip(),
+                "Device": ip_address,
+                "Status": status.strip(),
+                "Last Seen": last_seen.strip()
+            })
+        except Exception:
+            # if line is not in expected format, skip it
+            continue
+
+    # Pandas DataFrame for better display
+    if not error_messages:
+        st.info("No valid error messages found.")
+        return
+
+    df = pd.DataFrame(error_messages)
+    # for better readability, reverse the order
+    df = df.iloc[::-1]
+
+    # Streamlit dataframe with custom styling
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=450,     # Adjust as needed
+        hide_index=True
+    )
+
+def log(message, level="info"):
+    """Log message to the UI panel."""
+    colors = {"info": "🟦", "success": "🟩", "error": "🟥", "warn": "🟨"}
+    ts = datetime.datetime.now().strftime("%H:%M:%S")
+    st.session_state["log_lines"].append(
+        f"{colors.get(level,'🟦')} `{ts}` {message}"
+    )
+    log_panel.markdown("\n".join(st.session_state["log_lines"]), unsafe_allow_html=True)
 
 # --- Main PAGE ---
 if page == "Main":
@@ -212,20 +277,14 @@ if page == "Main":
     devices_yaml = load_yaml(DEVICES_FILE_PATH)
     devices_list = devices_yaml.get("devices", [])
     
-    def log(message, level="info"):
-        """Log message to the UI panel."""
-        colors = {"info": "🟦", "success": "🟩", "error": "🟥", "warn": "🟨"}
-        ts = datetime.datetime.now().strftime("%H:%M:%S")
-        st.session_state["log_lines"].append(
-            f"{colors.get(level,'🟦')} `{ts}` {message}"
-        )
-        log_panel.markdown("\n".join(st.session_state["log_lines"]), unsafe_allow_html=True)
+
 
     if "log_lines" not in st.session_state:
         st.session_state["log_lines"] = []
 
     # --- BACKUP, INVENTORY, FIRMWARE UPGRADE TASKS ---
     st.markdown("### Automation Tasks")
+
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -474,13 +533,23 @@ if page == "Main":
 
   
 # --- Show Backup Files PAGE ---
-elif page == "Show Backup Files":
-    show_backup_files()
+elif page == "Device List":
+    st.markdown("### Device List")
+    st.subheader("Device List")
+    show_device_status_content()
+
+elif page == "Tasks":
+    st.markdown("### Tasks")
+    st.markdown("This page is not ready yet. Please check back later or use the other available features.")
+    st.markdown("You can still run tasks from the main page or view backup files and error logs.")
 # --- Show Error Log PAGE ---
-elif page == "Show Error Log":
-    #show_error_log()
+elif page == "Logs":
     show_error_msg_table()
-elif page == "Run Command":
+elif page == "File Manager":
+    st.markdown("### File Manager")
+    st.markdown("This page is not ready yet. Please check back later or use the other available features.")
+    st.markdown("You can still run tasks from the main page or view backup files and error logs.")
+elif page == "Scheduler":
     ip = st.text_input("Device IP Address:")
     if not ip:
         st.warning("Please enter a device IP address.")
@@ -497,4 +566,8 @@ elif page == "Run Command":
             st.success("Command sent.")
         else:
             st.error("Command cannot be empty.")
+elif page == "User Settings":
+    st.markdown("### User Settings")
+    st.markdown("This page is not ready yet. Please check back later or use the other available features.")
+    st.markdown("You can still run tasks from the main page or view backup files and error logs.")
 

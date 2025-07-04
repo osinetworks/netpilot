@@ -81,6 +81,9 @@ FIRMWARE_FOLDER = "firmware/"
 # Output file path for firmware results
 FIRMWARE_RESULT_FILE_PATH = os.path.join(FIRMWARE_FOLDER, "firmware_results.yaml")
 
+# Status file path
+STATUS_FILE_PATH = os.path.join(OUTPUT_FOLDER, "status", "status.yaml")
+
 # Log folder path
 LOG_FOLDER = "logs/"
 
