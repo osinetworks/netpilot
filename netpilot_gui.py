@@ -312,7 +312,7 @@ if page == "Main":
 
             config_manager.main()
             show_task_results_table(CONFIG_RESULT_FILE_PATH, task_type="config")
-            
+
             logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(CONFIG_RESULT_FILE_PATH):
@@ -341,9 +341,9 @@ if page == "Main":
             logger = setup_logger("backup_manager")
             logger.info("Backup task started")
 
-            show_task_results_table(BACKUP_RESULT_FILE_PATH, task_type="backup")
             backup_manager.main()
-
+            show_task_results_table(BACKUP_RESULT_FILE_PATH, task_type="backup")
+            
             logger.info("Backup task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(BACKUP_RESULT_FILE_PATH):
@@ -373,9 +373,9 @@ if page == "Main":
             logger = setup_logger("inventory_manager")
             logger.info("Inventory task started")
 
-            show_task_results_table(INVENTORY_RESULT_FILE_PATH, task_type="inventory")
             inventory_manager.main()
-            
+            show_task_results_table(INVENTORY_RESULT_FILE_PATH, task_type="inventory")
+
             logger.info("Inventory task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(INVENTORY_RESULT_FILE_PATH):
