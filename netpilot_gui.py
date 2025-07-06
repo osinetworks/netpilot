@@ -310,9 +310,9 @@ if page == "Main":
             logger = setup_logger("config_manager")
             logger.info("Config task started")
 
-            show_task_results_table(CONFIG_RESULT_FILE_PATH, task_type="config")
             config_manager.main()
-
+            show_task_results_table(CONFIG_RESULT_FILE_PATH, task_type="config")
+            
             logger.info("Config task completed")
             # After running, check if any device had a failure and inform user accordingly
             if os.path.exists(CONFIG_RESULT_FILE_PATH):
